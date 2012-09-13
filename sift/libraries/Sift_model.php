@@ -82,7 +82,8 @@ class Sift_model extends CI_Model {
 	{
 		$EE =& get_instance();
 
-		$EE->load->model("sift_example_model");
+		$EE->load->model("sift_core_model");
+		$EE->load->model("sift_data_model");
 	}
 
 	// --------------------------------------------------------------------

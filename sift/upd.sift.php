@@ -67,8 +67,7 @@ class Sift_upd {
 		// Install tables
 		// --------------------------------------
 
-		$this->EE->sift_example_model->install();
-		// TODO add extra model install method calls
+		//$this->EE->sift_set_model->install();
 
 
 		// --------------------------------------
@@ -114,8 +113,7 @@ class Sift_upd {
 		// Uninstall tables
 		// --------------------------------------
 
-		$this->EE->sift_example_model->uninstall();
-		// TODO add extra calls to other model's uninstalls
+	//	$this->EE->sift_set_model->uninstall();
 
 		return TRUE;
 	}

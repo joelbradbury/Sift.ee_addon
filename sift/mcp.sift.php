@@ -5,7 +5,7 @@ class Sift_mcp
 {
 	public $module_name;
 	private $nocache;
-
+	private $cached_vars = array();
 
 	function __construct()
 	{
@@ -15,10 +15,12 @@ class Sift_mcp
 		$this->base = str_replace( '&amp;D=', '&D=', BASE.'&C=addons_modules&M=show_module_cp&module=' . $this->module_name );
 
 
+		$this->contols[]  = $this->base.AMP.'method=sets';
 		$this->contols[]  = $this->base.AMP.'method=settings';
 
 
 		$controls = array(  lang('sift')		=> $this->base . '&method=index',
+							lang('sets')		=> $this->base . '&method=sets',
 							lang('settings')	=> $this->base . '&method=settings');
 
 		$this->EE->cp->set_right_nav( $controls );
@@ -35,13 +37,6 @@ class Sift_mcp
 	}
 
 
-	function index()
-	{	
-		$this->EE->cp->set_variable('cp_page_title', lang('sift_module_name'));
-
-		return $this->EE->load->view('index', array(), TRUE);
-	
-	}
 	// --------------------------------------------------------------------
 
 	/**
@@ -50,6 +45,37 @@ class Sift_mcp
 	 * @access      public
 	 * @return      string
 	 */
+	function index()
+	{	
+		$this->EE->cp->set_variable('cp_page_title', lang('sift_module_name'));
+
+		return $this->EE->load->view('index', array(), TRUE);
+	
+	}
+
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * Module home page
+	 *
+	 * @access      public
+	 * @return      string
+	 */
+	function sets()
+	{		
+		$this->EE->cp->set_variable('cp_page_title', lang('sift_set_overview'));
+
+		// Get the current sift sets
+		$this->cached_vars['sets'] = $this->EE->sift_set_model->get_all();
+
+		// Give the option to create a new set
+		$this->cached_vars['new_set_uri'] = $this->base . '&method=new_set';
+
+
+		return $this->EE->load->view('mcp_sift_sets', $this->cached_vars, TRUE );
+	}
+
 	function settings()
 	{
 		// --------------------------------------
