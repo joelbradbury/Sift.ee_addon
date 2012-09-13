@@ -67,7 +67,15 @@ class Sift {
 			Mostly this is just to keep this mod. file nice
 			and clean and clutter free */
 
-		$this->EE->sift_core_model->handle_search();
+		$return = $this->EE->sift_core_model->handle_search();
+		if( $return === FALSE ) 
+		{
+			// Something was invalid in the search set
+			die('invalid search');
+		}
+
+		die('ok, returned somethign--<pre>'.print_R($return,1));
+
 
 	}
 

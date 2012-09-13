@@ -57,6 +57,34 @@ class Sift_data_model extends Sift_model {
 		//$this->EE->db->query("ALTER TABLE {$this->table()} ADD INDEX (`site_id`)");
 	}
 
+	/*
+		
+		$channel_id 		= $this->EE->sift_data_model->get_channel_id( $channel );
+		$matrix_field_id	= $this->SS->sift_data_model->get_matrix_id( $matrix_field );
+		$cell_ids 			= $this->EE->sift_data_model->get_cell_ids( $cell_names );*/
+
+
+	public function get_channel_id( $channel_name = '' )
+	{
+		if( $channel_name == '' ) return FALSE;
+
+		return 1;
+	}
+
+	public function get_matrix_id( $matrix_field_name = '' )
+	{
+		if( $matrix_field_name == '' ) return FALSE;
+
+		return 2;
+	}
+
+	public function get_cell_ids( $cell_names = array() )
+	{
+		if( empty( $cell_names ) ) return array();
+
+		return array('cell_title'=> 1, 'cell_extra'=> 2);
+	}
+
 
 
 

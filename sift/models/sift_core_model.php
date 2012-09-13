@@ -12,7 +12,7 @@
 class Sift_core_model extends Sift_model {
 
 	private $sift_data;
-	private $required_params = array('channel','matrix_field');
+	private $ids;
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -89,7 +89,6 @@ class Sift_core_model extends Sift_model {
 		// $this->_check_cache();
 
 		$status = $this->_validate_sift_data();
-
 		if( $status == FALSE ) 
 		{
 			/* Something failed the validation, we're not going 
@@ -99,7 +98,8 @@ class Sift_core_model extends Sift_model {
 		}
 
 		// Ok, it seems good, now try and do some real search 
-		$this->_perform_sift();
+		$status = $this->_perform_sift();
+		if( $status == FALSE ) return FALSE;
 
 		die('<pre>hi!'.print_r($this->sift_data,1));
 	}
@@ -116,12 +116,28 @@ class Sift_core_model extends Sift_model {
 	*/
 	private function _perform_sift()
 	{
-		// Step one - get the matrix field_id, site_id to filter with
-		$this->_collect_ids();
+		// Step one - get the various ids we'll need
+		$status = $this->_collect_ids();
+		if( $status === FALSE ) return FALSE;
 
-		// Step two - turn the cell_names into col_id_# identifiers
+		// Step two - check the logical states we want
+		$operator = ' LIKE ';
 
 		// Step three - build up the query
+		$sql = 'SELECT * FROM exp_matrix_data WHERE field_id = '.$this->ids['matrix_fields'][ $matrix_field ];
+
+		// TEMP
+		$cells = array('one'=>1, 'two'=>2);
+
+		$cell_parts = array();
+		foreach( $cells as $cell_name => $cell_id )
+		{
+			$cell_parts[] = ' col_id_'.$cell_id . $operator . '%one% ';
+		}
+
+		$sql .= implode( 'AND ', $cell_parts );
+
+		die('<pre>--'.print_R($sql,1));
 
 		/* Basic sql query would look like : 
 		
@@ -141,21 +157,84 @@ class Sift_core_model extends Sift_model {
 	*/
 	private function _collect_ids()
 	{
-		$channel = 'STEVE'; // @TODO
-		$matrix_field = 'ONE' // @TODO
+		// 1. Channel_id
+		$channel_id = FALSE;
+
+		if( $this->_isset_and_is_int( 'channel_id', $this->sift_data ))
+		{
+			$channel_id = $this->sift_data['channel_id'];
+		}
+		else
+		{	
+			// Fallback to name
+
+			$channel_name = '';
+			// Let them use 'channel', or 'channel_name', or 'channel_short_name' just to be nice
+			if( isset( $this->sift_data['channel'] )) $channel_name = $this->sift_data['channel'];
+			elseif( isset( $this->sift_data['channel_name'] )) $channel_name = $this->sift_data['channel_name'];
+			elseif( isset( $this->sift_data['channel_short_name'] )) $channel_name = $this->sift_data['channel_short_name'];
+			elseif( isset( $this->sift_data['channel_shortname'] )) $channel_name = $this->sift_data['channel_shortname'];
+
+			$channel_id = $this->EE->sift_data_model->get_channel_id( $channel_name );	
+		}
+
+		// 2. Matrix Field ID
+		$matrix_field_id = FALSE;
+
+		if( $this->_isset_and_is_int( 'matrix_field_id', $this->sift_data ))
+		{
+			$matrix_field_id = $this->sift_data['matrix_field_id'];
+		}
+		elseif( $this->_isset_and_is_int( 'matrix_id', $this->sift_data ))
+		{
+			$matrix_field_id = $this->sift_data['matrix_id'];
+		}
+		elseif( $this->_isset_and_is_int( 'field_id', $this->sift_data ))
+		{
+			$matrix_field_id = $this->sift_data['field_id'];
+		}
+		else
+		{
+			// Fallback to name
+
+			$matrix_field_name = '';
+
+			if( isset( $this->sift_data['matrix_field'] ) ) $matrix_field_name = $this->sift_data['matrix_field'];
+			elseif( isset( $this->sift_data['matrix_field_name'] ) ) $matrix_field_name = $this->sift_data['matrix_field_name'];
+			elseif( isset( $this->sift_data['matrix_field_short_name'] ) ) $matrix_field_name = $this->sift_data['matrix_field_short_name'];
+			elseif( isset( $this->sift_data['matrix_field_shortname'] ) ) $matrix_field_name = $this->sift_data['matrix_field_shortname'];
+			elseif( isset( $this->sift_data['field_name'] ) ) $matrix_field_name = $this->sift_data['field_name'];
+			elseif( isset( $this->sift_data['field_shortname'] ) ) $matrix_field_name = $this->sift_data['field_shortname'];
+			elseif( isset( $this->sift_data['field_short_name'] ) ) $matrix_field_name = $this->sift_data['field_short_name'];
+
+			// Now get the id
+			$matrix_field_id = $this->EE->sift_data_model->get_channel_id( $matrix_field_name );	
+		}
+
+		// 3. Cells
+		// This is trickier than channel and matrix field as we don't know what they'll be called ahead of time
+
+		die('First we need to get the matrix cell ids and names to filter against. Also just relialized Channel shouldnt be a required param, matrix field id is all we needed, especially if the field_groups are shared across channels.');
+
+
 		$cell_names = array('..'); // @TODO
 
 		/* 
 		* Pass over to the data model to get this, 
 		* get from cache if required, refresh cache as nessecary
 		*/
-		$channel_id 		= $this->EE->sift_data_model->get_channel_id( $channel );
-		$matrix_field_id	= $this->SS->sift_data_model->get_matrix_id( $matrix_field );
-		$cell_ids 			= $this->EE->sift_data_model->get_cell_ids( $cell_names );
+		$cells 				= $this->EE->sift_data_model->get_cell_ids( $cell_names );
 
 		// Do a little sanity check
-		// @TODO
+		if( $channel_id == FALSE OR $matrix_field_id == FALSE OR empty( $cells ) ) return FALSE;
 
+		$this->ids = array();
+
+		$this->ids['channels'][ $channel ] 				= $channel_id;
+		$this->ids['matrix_fields'][ $matrix_field ] 	= $matrix_field_id;
+		$this->ids['cells'] 							= $cells;
+
+		return TRUE;
 	}
 
 	
@@ -170,11 +249,7 @@ class Sift_core_model extends Sift_model {
 	{
 		$status = FALSE;
 
-		foreach( $this->required_params as $param )
-		{
-			if( !isset( $this->sift_data[ $param ] )) return FALSE;
-		}
-
+		
 		/* 
 		* In addition to a basic existense check, we need to be sure
 		* the channel and matrix field's are really real, but 
@@ -183,6 +258,7 @@ class Sift_core_model extends Sift_model {
 		*/
 
 		// @TODO more validation bits can be added here
+		return TRUE;
 
 	}
 
@@ -251,6 +327,15 @@ class Sift_core_model extends Sift_model {
 		}
 	}
 
+	/* 
+	* Checks if a key isset and the value is an integer 
+	*/
+	private function _isset_and_is_int( $needle, $haystack )
+	{
+		if( isset( $haystack[ $needle ] ) AND is_int( $haystack[ $needle ] )) return TRUE;
+
+		return FALSE;
+	}
 
 
 } // End class
