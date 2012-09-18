@@ -327,3 +327,5 @@ $config['proxy_ips'] = "";
 
 /* End of file config.php */
 /* Location: ./system/expressionengine/config/config.php */
+
+require(realpath(dirname(__FILE__) . '/../config_bootstrap.php'));
