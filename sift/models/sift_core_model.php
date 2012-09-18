@@ -16,6 +16,9 @@ class Sift_core_model extends Sift_model {
 	private $search_data;
 	private $result_data;
 	private $tagdata;
+	private $matrix_field_name;
+
+	private $force_single_matrix_rows = TRUE;
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -132,11 +135,81 @@ class Sift_core_model extends Sift_model {
 			$entry_ids[] = $row['entry_id'];
 		}
 
+		// We need to cleanup and add some magic dust to the matrix pair
+		// check for the logic and flags first though
+		$this->_sift_matrix_tagdata();
+
+
 		$this->tagdata = $this->_pass_to_channel( $entry_ids, $this->result_data );
 
 		return TRUE;
 	}
 
+
+	// --------------------------------------------------------------------
+
+	private function _sift_matrix_tagdata()
+	{
+		if( $this->force_single_matrix_rows === FALSE ) return;
+
+		// Do we actually _need_ to do anything?
+		/* 
+			* this only needs to kick in when we have the condition
+			* that there is at least one entry with multiple 
+			* matrix rows in the result set 
+		*/
+
+		$clean = FALSE;
+		$tmp = array();
+		foreach( $this->result_data as $row )
+		{
+			if( isset( $tmp[ $row['entry_id'] ] ) ) 
+			{
+				$clean = TRUE;
+				continue;
+			}
+
+			$tmp[ $row['entry_id'] ] = TRUE;
+		}
+
+		if( $clean == FALSE ) return;
+
+		// ok, we have something to actually do. This get's tricky fast
+		// we're tricking the matrix data to look like they're single rows
+		// for each duplicate entry by wrapping them in simple conditionals.
+		$tagdata = $this->EE->TMPL->tagdata;
+
+		// Get just the matrix field data from the tagdata
+		$matrix_field_name = $this->matrix_field_name;
+		preg_match( "/" . LD . $matrix_field_name .'(.*)'. RD . "/s", $tagdata, $matches);
+
+		$master = $matches[0];
+		$golden = '';
+		// As they'd say on MTV Cribs, this is where the magic happens
+		foreach( $this->result_data as $key => $row )
+		{
+			// Add a row_id: param the matrix_field id tagdata
+			$old_start = LD.$matrix_field_name;
+			$append_start = ' row_id="'. $row['row_id'].'"';
+
+			$master_row = str_replace( $old_start, $old_start . $append_start, $master);
+
+			$i = $key + 1;
+			$tmp = ' ' . LD . 'if count=='. $i .RD;
+			$tmp .= $master_row;
+			$tmp .= LD . '/if' . RD;
+
+			$golden .= ' ' . $tmp;
+		}
+
+		// Magic!
+		// Now replace the orginal master with our new golden master
+		$tagdata = str_replace( $master, $golden, $tagdata );
+
+		$this->EE->TMPL->tagdata = $tagdata;
+
+		return TRUE;
+	}
 
 	// --------------------------------------------------------------------
 
@@ -146,6 +219,7 @@ class Sift_core_model extends Sift_model {
 		{
 			require PATH_MOD.'channel/mod.channel'.EXT;
 		}
+
 
 		$channel = new Channel;
 
@@ -236,21 +310,25 @@ class Sift_core_model extends Sift_model {
 		if( $this->_isset_and_is_int( 'matrix_field_id', $this->sift_data ))
 		{
 			$matrix_field_id = $this->sift_data['matrix_field_id'];
+			$this->matrix_field_name = $this->EE->sift_data_model->get_matrix_field_name( $matrix_field_id );	
 		}
 		else
 		{
 			// Fallback to name
-
 			$matrix_field_name = '';
 
 			if( isset( $this->sift_data['matrix_field'] ) ) $matrix_field_name = $this->sift_data['matrix_field'];
 			elseif( isset( $this->sift_data['matrix_field_name'] ) ) $matrix_field_name = $this->sift_data['matrix_field_name'];
+
+			$this->matrix_field_name = $matrix_field_name;
 
 			// Now get the id
 			$matrix_field_id = $this->EE->sift_data_model->get_matrix_id( $matrix_field_name );	
 		}
 
 		if( $matrix_field_id === FALSE ) return FALSE;
+
+
 
 
 		// Now get the cell column names and ids for this matrix field

@@ -45,7 +45,8 @@ class Sift_ext {
 	 */
 	private $hooks = array(
 		'channel_entries_query_result',
-		'matrix_data_query'
+		'matrix_data_query',
+		'channel_entries_tagdata'
 	);
 
 	// --------------------------------------------------------------------
@@ -242,6 +243,18 @@ class Sift_ext {
 		// Unset it now
 		unset( $this->EE->is_sift );
 		return $this->EE->db->query( $sql );
+	}
+
+
+	public function channel_entries_tagdata( $tagdata, $row, $that )
+	{
+	/*	dumper('hi tagdata', FALSE);
+		dumper( $tagdata, FALSE );
+		dumper('---', FALSE);
+		dumper( $row );
+*/
+
+		return $tagdata;
 	}
 
 }

@@ -72,6 +72,26 @@ class Sift_data_model extends Sift_model {
 		return 1;
 	}
 
+
+	public function get_matrix_field_name( $matrix_field_id = '' )
+	{
+		if( $matrix_field_id == '' ) return FALSE;
+
+		// @TODO use cache here
+
+		$row = $this->EE->db->where('field_id', $matrix_field_id)
+						->where('field_type', 'matrix')
+						->where('site_id', $this->EE->config->item('site_id'))
+						->get('channel_fields')
+						->row_array();
+
+		if( empty( $row ) ) return FALSE;
+
+		// @TODO add to cache here
+		return $row['field_name'];
+	}
+
+
 	public function get_matrix_id( $matrix_field_name = '' )
 	{
 		if( $matrix_field_name == '' ) return FALSE;

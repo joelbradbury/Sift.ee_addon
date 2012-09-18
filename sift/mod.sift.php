@@ -71,7 +71,7 @@ class Sift {
 		if( $return === FALSE ) 
 		{
 			// Something was invalid in the search set
-			die('invalid search');
+			$this->tagdata = $this->EE->TMPL->no_results; //ie('invalid search');
 		}
 		$this->tagdata = $return;
 
