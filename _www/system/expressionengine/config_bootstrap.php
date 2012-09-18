@@ -14,7 +14,7 @@ if(!defined('NSM_ENV')) {
 
     // Set the environment
     if ( strstr( NSM_SERVER_NAME, '.loc' ) ) define('NSM_ENV', 'local');
-    elseif( strstr( NSM_SERVER_NAME, 'shortlist.' ) ) define('NSM_ENV', 'development');
+    elseif( strstr( NSM_SERVER_NAME, 'sift.' ) ) define('NSM_ENV', 'development');
     else define('NSM_ENV', 'production');
 }
 
