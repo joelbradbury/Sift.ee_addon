@@ -405,5 +405,61 @@ class Sift_model extends CI_Model {
 
 	// --------------------------------------------------------------------
 
+	/**
+	 *	Check if Submitted String is a Yes value
+	 *
+	 *	If the value is 'y', 'yes', 'true', or 'on', then returns TRUE, otherwise FALSE
+	 *
+	 *	@access		public
+	 *	@param		string
+	 *	@return		bool
+	 */
+
+    function check_yes($which)
+    {
+		switch($which)
+		{
+			case 'y'	:
+			case 'yes'	:
+			case 'on'	:
+			case 'true'	:
+				return TRUE;
+			break;
+			default		:
+				return FALSE;	
+			break;
+		}
+    }
+    /* END check_yes() */
+    
+	// --------------------------------------------------------------------
+
+	/**
+	 *	Check if Submitted String is a No value
+	 *
+	 *	If the value is 'n', 'no', 'false', or 'off', then returns TRUE, otherwise FALSE
+	 *
+	 *	@access		public
+	 *	@param		string
+	 *	@return		bool
+	 */
+
+    function check_no($which)
+    {
+		switch($which)
+		{
+			case 'n'	:
+			case 'no'	:
+			case 'off'	:
+			case 'false'	:
+				return TRUE;
+			break;
+			default		:
+				return FALSE;	
+			break;
+		}
+    }
+    /* END check_yes() */
+
 }
 // End of file Sift_model.php

@@ -17,24 +17,17 @@
 
 		</div>
 		<div class="span9">
-			<h2>Sifted Entries</h2>
+			
 
 			{exp:sift:view
 				channel="main"
 				orderby="row"
-				matrix_field="matrix_field"
-				cell_one="title"}
+				matrix_field="matrix_field"}
 
-				{if count==1}<h3>{total_results} results</h3>{/if}
+				{if count==1}<h2>Sifted Entries <small>{total_results} results</small></h2>{/if}
 
-				<p>{title}, {entry_id}</p>
+				<h4>#{entry_id} {title}</h4>
 				<table class="table table-bordered table-striped">
-	              <thead>
-	                <tr>
-	                  <th>Title</th>
-	                  <th>Extra</th>
-	                </tr>
-	              </thead>
 	              <tbody>
 	              	{matrix_field test_param='test_param'}
 	              	<tr>
@@ -44,13 +37,10 @@
 	              	{/matrix_field}
 	              </tbody>
 	            </table>
-		        <hr/>
 
 			{/exp:sift:view}
 
 			
-			<hr/>
-
 		</div>
 	</div>
 </section>

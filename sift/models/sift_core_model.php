@@ -234,6 +234,7 @@ class Sift_core_model extends Sift_model {
 		$channel->is_sift = TRUE;
 		$channel->sift_items = $items;
 		$channel->sift_order = $entry_ids;
+		$channel->sift_settings = array('seperate_rows' => $this->force_single_matrix_rows );
 
 		$t = $channel->entries();
 
@@ -387,6 +388,15 @@ class Sift_core_model extends Sift_model {
 		* we'll check that on the fly later while trying 
 		* to run the query 
 		*/
+
+		// Overrides for the default settings
+		if( isset( $this->sift_data[ 'seperate_matrix_rows' ] ) )
+		{
+			if( $this->check_no( $this->sift_data['seperate_matrix_rows'] ) )
+			{
+				$this->force_single_matrix_rows = FALSE;
+			}
+		}
 
 		// @TODO more validation bits can be added here
 		return TRUE;

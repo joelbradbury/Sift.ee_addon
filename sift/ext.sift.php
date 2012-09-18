@@ -169,10 +169,19 @@ class Sift_ext {
 	{
 		if( isset( $that->is_sift ) AND $that->is_sift === TRUE )
 		{
+
+
 			// Drop a marker on the EE object to keep track of this 
 			// object loop
 			$this->EE->is_sift = TRUE;
 			$this->EE->sift_items = $that->sift_items;
+
+			// This special handling can be disabled via params, check our marker
+			if( isset( $that->sift_settings['seperate_rows'] ) AND $that->sift_settings['seperate_rows'] == FALSE )
+			{
+				return $query_result;
+			}
+			
 
 			// Right, we have a sift order, and need to rearrange
 			// the passed query result to match
