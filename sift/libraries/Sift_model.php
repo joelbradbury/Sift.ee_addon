@@ -39,6 +39,8 @@ class Sift_model extends CI_Model {
 
 		// Set global object
 		$this->EE =& get_instance();
+
+		$this->EE->load->helper('sift_helper');
 	}
 
 	

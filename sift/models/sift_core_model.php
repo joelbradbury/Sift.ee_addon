@@ -13,6 +13,7 @@ class Sift_core_model extends Sift_model {
 
 	private $sift_data;
 	private $ids;
+	private $search_data;
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -120,31 +121,30 @@ class Sift_core_model extends Sift_model {
 		$status = $this->_collect_ids();
 		if( $status === FALSE ) return FALSE;
 
+
 		// Step two - check the logical states we want
 		$operator = ' LIKE ';
+		$grouper  = ' OR ';
 
 		// Step three - build up the query
-		$sql = 'SELECT * FROM exp_matrix_data WHERE field_id = '.$this->ids['matrix_fields'][ $matrix_field ];
+		if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
+		$sql = 'SELECT * FROM exp_matrix_data WHERE field_id = '.$this->ids['matrix_field_id'] . ' AND ';
 
-		// TEMP
-		$cells = array('one'=>1, 'two'=>2);
 
 		$cell_parts = array();
-		foreach( $cells as $cell_name => $cell_id )
+		foreach( $this->ids['cells'] as $cell_id )
 		{
-			$cell_parts[] = ' col_id_'.$cell_id . $operator . '%one% ';
+			$cell_parts[] = ' col_id_'.$cell_id . $operator. '"%'.$this->search_data['cells'][ $cell_id ].'%" ';
 		}
 
-		$sql .= implode( 'AND ', $cell_parts );
+		$sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';
 
-		die('<pre>--?'.print_R($sql,1));
+		$res = $this->EE->db->query( $sql )->result_array();
 
-		/* Basic sql query would look like : 
-		
-			SELECT * FROM exp_matrix_data 
-				WHERE field_id = $matrix_field_id 
-				AND col_id_3 LIKE %$value% 
-		*/
+		// No results (or bad query)
+		if( empty( $res ) ) return FALSE;
+
+		dumper( $res );
 
 	}
 
@@ -194,8 +194,6 @@ class Sift_core_model extends Sift_model {
 			return FALSE;
 		}
 
-		die('here - cleaning up the passed array of cells into a clean and usable format based on the possible_cells, cleaning from mixed col_id_# and cell_name forms');
-
 		// Now we can cleanup and just get the search data for the cells that are possible
 		$passed_cells = array();
 		foreach( $possible_cells as $cell_name => $cell_id )
@@ -203,29 +201,24 @@ class Sift_core_model extends Sift_model {
 			// Is this cell assigned as an id?
 			if( isset( $this->sift_data[ 'col_id_'.$cell_id ] ) )
 			{
-//				$passed_cells[ $cell_name ] => $cell_id;
+				$passed_cells[ $cell_id ] = $this->sift_data['col_id_'.$cell_id];
+			}
+			elseif( isset( $this->sift_data[ $cell_name ] ) )
+			{
+				$passed_cells[ $cell_id ] = $this->sift_data[ $cell_name ];
 			}
 
 		}
-		die('--<pre>'.print_R($this->sift_data,1));
+
+		// Nothing to do
+		if( empty( $passed_cells ) ) return FALSE;
 
 
-		$cell_names = array('..'); // @TODO
 
-		/* 
-		* Pass over to the data model to get this, 
-		* get from cache if required, refresh cache as nessecary
-		*/
-		$cells 				= $this->EE->sift_data_model->get_cell_ids( $cell_names );
+		$this->ids['matrix_field_id']				= $matrix_field_id;
+		$this->ids['cells']							= array_keys( $passed_cells );
 
-		// Do a little sanity check
-		if( $channel_id == FALSE OR $matrix_field_id == FALSE OR empty( $cells ) ) return FALSE;
-
-		$this->ids = array();
-
-		$this->ids['channels'][ $channel ] 				= $channel_id;
-		$this->ids['matrix_fields'][ $matrix_field ] 	= $matrix_field_id;
-		$this->ids['cells'] 							= $cells;
+		$this->search_data['cells'] 				= $passed_cells;
 
 		return TRUE;
 	}
