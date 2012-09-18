@@ -68,6 +68,7 @@ class Sift_data_model extends Sift_model {
 	{
 		if( $channel_name == '' ) return FALSE;
 
+		die('nope');
 		return 1;
 	}
 
@@ -75,7 +76,18 @@ class Sift_data_model extends Sift_model {
 	{
 		if( $matrix_field_name == '' ) return FALSE;
 
-		return 2;
+		// @TODO use cache here
+
+		$row = $this->EE->db->where('field_name', $matrix_field_name)
+						->where('field_type', 'matrix')
+						->where('site_id', $this->EE->config->item('site_id'))
+						->get('channel_fields')
+						->row_array();
+
+		if( empty( $row ) ) return FALSE;
+
+		// @TODO add to cache here
+		return $row['field_id'];
 	}
 
 	public function get_cell_ids( $cell_names = array() )
@@ -86,6 +98,26 @@ class Sift_data_model extends Sift_model {
 	}
 
 
+	public function get_cells_for_matrix( $matrix_field_id )
+	{
+		$res = $this->EE->db->where('field_id', $matrix_field_id)
+						->where('col_search', 'y')
+						->order_by('col_order','asc')
+						->get('matrix_cols')
+						->result_array();
+		if( empty( $res ) ) return FALSE;
+
+		// @TODO cache things a bit
+
+		$return = array();
+
+		foreach( $res as $row )
+		{
+			$return[ $row['col_name'] ] = $row['col_id'];
+		}
+
+		return $return;
+	}
 
 
 } // End class

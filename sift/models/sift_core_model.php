@@ -137,7 +137,7 @@ class Sift_core_model extends Sift_model {
 
 		$sql .= implode( 'AND ', $cell_parts );
 
-		die('<pre>--'.print_R($sql,1));
+		die('<pre>--?'.print_R($sql,1));
 
 		/* Basic sql query would look like : 
 		
@@ -157,41 +157,18 @@ class Sift_core_model extends Sift_model {
 	*/
 	private function _collect_ids()
 	{
-		// 1. Channel_id
-		$channel_id = FALSE;
 
-		if( $this->_isset_and_is_int( 'channel_id', $this->sift_data ))
-		{
-			$channel_id = $this->sift_data['channel_id'];
-		}
-		else
-		{	
-			// Fallback to name
+		// At a minimum all we need is the matrix field id
+		// That can be supplied as either : 
+		//  matrix_field_name or matrix_field_id 
 
-			$channel_name = '';
-			// Let them use 'channel', or 'channel_name', or 'channel_short_name' just to be nice
-			if( isset( $this->sift_data['channel'] )) $channel_name = $this->sift_data['channel'];
-			elseif( isset( $this->sift_data['channel_name'] )) $channel_name = $this->sift_data['channel_name'];
-			elseif( isset( $this->sift_data['channel_short_name'] )) $channel_name = $this->sift_data['channel_short_name'];
-			elseif( isset( $this->sift_data['channel_shortname'] )) $channel_name = $this->sift_data['channel_shortname'];
-
-			$channel_id = $this->EE->sift_data_model->get_channel_id( $channel_name );	
-		}
-
-		// 2. Matrix Field ID
+		// Any extra filters like channel(s) entry_id(s) status(es) will 
+		// be applied via the channel->entries class before we cleanup later
 		$matrix_field_id = FALSE;
 
 		if( $this->_isset_and_is_int( 'matrix_field_id', $this->sift_data ))
 		{
 			$matrix_field_id = $this->sift_data['matrix_field_id'];
-		}
-		elseif( $this->_isset_and_is_int( 'matrix_id', $this->sift_data ))
-		{
-			$matrix_field_id = $this->sift_data['matrix_id'];
-		}
-		elseif( $this->_isset_and_is_int( 'field_id', $this->sift_data ))
-		{
-			$matrix_field_id = $this->sift_data['field_id'];
 		}
 		else
 		{
@@ -201,20 +178,36 @@ class Sift_core_model extends Sift_model {
 
 			if( isset( $this->sift_data['matrix_field'] ) ) $matrix_field_name = $this->sift_data['matrix_field'];
 			elseif( isset( $this->sift_data['matrix_field_name'] ) ) $matrix_field_name = $this->sift_data['matrix_field_name'];
-			elseif( isset( $this->sift_data['matrix_field_short_name'] ) ) $matrix_field_name = $this->sift_data['matrix_field_short_name'];
-			elseif( isset( $this->sift_data['matrix_field_shortname'] ) ) $matrix_field_name = $this->sift_data['matrix_field_shortname'];
-			elseif( isset( $this->sift_data['field_name'] ) ) $matrix_field_name = $this->sift_data['field_name'];
-			elseif( isset( $this->sift_data['field_shortname'] ) ) $matrix_field_name = $this->sift_data['field_shortname'];
-			elseif( isset( $this->sift_data['field_short_name'] ) ) $matrix_field_name = $this->sift_data['field_short_name'];
 
 			// Now get the id
-			$matrix_field_id = $this->EE->sift_data_model->get_channel_id( $matrix_field_name );	
+			$matrix_field_id = $this->EE->sift_data_model->get_matrix_id( $matrix_field_name );	
 		}
 
-		// 3. Cells
-		// This is trickier than channel and matrix field as we don't know what they'll be called ahead of time
+		if( $matrix_field_id === FALSE ) return FALSE;
 
-		die('First we need to get the matrix cell ids and names to filter against. Also just relialized Channel shouldnt be a required param, matrix field id is all we needed, especially if the field_groups are shared across channels.');
+
+		// Now get the cell column names and ids for this matrix field
+		$possible_cells = $this->EE->sift_data_model->get_cells_for_matrix( $matrix_field_id );
+		if( $possible_cells === FALSE )
+		{
+			// This isn't a valid matrix field, or there are no cells to search on, either way, rebuff
+			return FALSE;
+		}
+
+		die('here - cleaning up the passed array of cells into a clean and usable format based on the possible_cells, cleaning from mixed col_id_# and cell_name forms');
+
+		// Now we can cleanup and just get the search data for the cells that are possible
+		$passed_cells = array();
+		foreach( $possible_cells as $cell_name => $cell_id )
+		{
+			// Is this cell assigned as an id?
+			if( isset( $this->sift_data[ 'col_id_'.$cell_id ] ) )
+			{
+//				$passed_cells[ $cell_name ] => $cell_id;
+			}
+
+		}
+		die('--<pre>'.print_R($this->sift_data,1));
 
 
 		$cell_names = array('..'); // @TODO
