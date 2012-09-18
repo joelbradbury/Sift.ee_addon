@@ -106,11 +106,13 @@ class Sift {
 		$bare .= $tagdata;
 		$bare .= "</form>";
 
+		$data = array_merge( $data, array('col_id_1', 'cell_extra') );
+
 		// Parse tagdata
 		$t = $this->EE->TMPL->parse_variables(
 				$bare,
 				array($data),
-				FALSE 
+				TRUE 
 			);
 			
 		return $t;
