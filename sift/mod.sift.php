@@ -73,10 +73,9 @@ class Sift {
 			// Something was invalid in the search set
 			die('invalid search');
 		}
+		$this->tagdata = $return;
 
-		die('ok, returned somethign--<pre>'.print_R($return,1));
-
-
+		return TRUE;
 	}
 
 

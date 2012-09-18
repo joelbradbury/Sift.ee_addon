@@ -14,6 +14,8 @@ class Sift_core_model extends Sift_model {
 	private $sift_data;
 	private $ids;
 	private $search_data;
+	private $result_data;
+	private $tagdata;
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -102,9 +104,67 @@ class Sift_core_model extends Sift_model {
 		$status = $this->_perform_sift();
 		if( $status == FALSE ) return FALSE;
 
-		die('<pre>hi!'.print_r($this->sift_data,1));
+		// The result data should be in $result_data, do a quick sanity check 
+		if( empty( $this->result_data ) ) return FALSE;
+
+		// Now, actually use the data for something we need
+		$status = $this->_parse_results();
+		if( $status == FALSE ) return FALSE;
+
+		return $this->tagdata;
 	}
 
+	
+	// --------------------------------------------------------------------
+
+	/* 
+	* Does the hard work of taking a result set, cleaning and passing
+	* over to the channel model, then cleaning and returning tag data
+	* to be output by the front-end tags
+	*/
+	private function _parse_results()
+	{
+		if( empty( $this->result_data ) ) return FALSE;
+
+		$entry_ids = array();
+		foreach( $this->result_data as $row )
+		{
+			$entry_ids[] = $row['entry_id'];
+		}
+
+		$this->tagdata = $this->_pass_to_channel( $entry_ids, $this->result_data );
+
+		return TRUE;
+	}
+
+
+	// --------------------------------------------------------------------
+
+	private function _pass_to_channel( $entry_ids = array(), $items = array() ) 
+	{
+		if ( class_exists('Channel') === FALSE )
+		{
+			require PATH_MOD.'channel/mod.channel'.EXT;
+		}
+
+		$channel = new Channel;
+
+		$this->EE->TMPL->tagparams['dynamic'] = FALSE;
+		$this->EE->TMPL->tagparams['entry_id'] = implode( '|', $entry_ids);
+		$this->EE->TMPL->tagparams['fixed_order'] = implode( '|', $entry_ids);
+		$this->EE->TMPL->tagparams['dynamic_parameters'] = FALSE;
+
+
+		// Add our markers to the channel object, so that the sift ext
+		// can jump in later and clean this up a bit
+		$channel->is_sift = TRUE;
+		$channel->sift_items = $items;
+		$channel->sift_order = $entry_ids;
+
+		$t = $channel->entries();
+
+		return $t;
+	}
 
 	// --------------------------------------------------------------------
 
@@ -124,7 +184,7 @@ class Sift_core_model extends Sift_model {
 
 		// Step two - check the logical states we want
 		$operator = ' LIKE ';
-		$grouper  = ' OR ';
+		$grouper  = ' AND ';
 
 		// Step three - build up the query
 		if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
@@ -144,8 +204,15 @@ class Sift_core_model extends Sift_model {
 		// No results (or bad query)
 		if( empty( $res ) ) return FALSE;
 
-		dumper( $res );
 
+		// Great! We have some actual matrix rows
+		// Now we need to actually pass them back up to the channel model
+		// and do something useful with them
+		// also cache perhaps
+
+		$this->result_data = $res;
+
+		return TRUE;
 	}
 
 	// --------------------------------------------------------------------
