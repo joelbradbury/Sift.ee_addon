@@ -68,6 +68,18 @@ class Sift_core_model extends Sift_model {
 
 	// --------------------------------------------------------------
 
+	public function handle_get_post()
+	{	
+		$this->sift_data = array();
+
+		$this->_check_tmpl();
+		$this->_check_post();
+
+		return $this->sift_data;
+	}
+
+	// --------------------------------------------------------------
+
 	public function handle_search()
 	{
 		/* There are 3 options for getting the sift parameters 
@@ -80,7 +92,7 @@ class Sift_core_model extends Sift_model {
 			and those that if supplied via TMPL cannot be overridden
 			by GET or POST data */
 
-		// Clear it out just in case
+		// Clear it out just in case		
 		$this->sift_data = array();
 
 		$this->_check_tmpl();

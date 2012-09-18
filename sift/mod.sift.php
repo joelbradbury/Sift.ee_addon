@@ -87,6 +87,9 @@ class Sift {
 	*/
 	private function _wrap_form( $tagdata )
 	{
+		$data = $this->EE->sift_core_model->handle_get_post();
+
+
 		$form_class = ' ';
 		$form_id = ' ';
 
@@ -94,7 +97,7 @@ class Sift {
 		$form_id 	= $this->EE->TMPL->fetch_param('id');
 
 		// Get the action_id 
-		$action_url = '/search';//$this->_get_action_url('invite_to_group');
+		$action_url = '/search';
 
 		$hidden = '<input type="hidden" name="sift_search" value="yes"/>';
 		$bare = "<form name='sift_form' id='".$form_id."' class='".$form_class."' method='post' action='".$action_url."'>";
@@ -103,7 +106,14 @@ class Sift {
 		$bare .= $tagdata;
 		$bare .= "</form>";
 
-		return $bare;
+		// Parse tagdata
+		$t = $this->EE->TMPL->parse_variables(
+				$bare,
+				array($data),
+				FALSE 
+			);
+			
+		return $t;
 	}
 
 }
