@@ -68,9 +68,20 @@ if(isset($config)) {
   
     $assign_to_config['global_vars'] = array_merge($assign_to_config['global_vars'], $default_global_vars, $env_global_vars);
 
+  /**
+     * Config. This shouldn't have to be changed if you're using the Newism EE2 template.
+     */
+    $default_config = array(
+
+        // Theme preferences
+        'theme_folder_path' => NSM_BASEPATH . '/../../../themes/',
+        'theme_folder_url' => NSM_SITE_URL . '/themes/',
+
+    );
+
 
     // Build the new config object
-    $config = array_merge($config, $env_config);
+    $config = array_merge($config, $default_config, $env_config);
 }
 
 // DB bootsrap... GO!
