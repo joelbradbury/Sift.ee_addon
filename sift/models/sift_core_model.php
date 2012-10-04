@@ -91,12 +91,34 @@ class Sift_core_model extends Sift_model {
 			{
 				// There is a match!
 				// Kick into collection and population mode
-				//$data['options'][ $cell_name ] = $this->EE->sift_data_model->get_cell_possible_values( $cell_name )
+				$data['options'][ $cell_name ] = $this->EE->sift_data_model->get_cell_possible_values( $cell_id );
 			}		
 
 		}
 		$data['blanks'] = $blank;
-		
+
+		if( isset( $data['options'] ) AND is_array( $data['options'] ) )
+		{
+			$vars = array();
+
+			// We have sub-options, we need to parse this in the tagdata
+			foreach( $data['options'] as $cell_name => $options )
+			{
+				// Find the matching markers in the tagdata					
+				if ( preg_match("|" . LD . $cell_name . RD . "(.*)". LD . '/' . $cell_name . RD . "|s", $tagdata, $match))
+				{
+					// Build up the data array and pass over to native parse_variables
+					foreach( $options as $option ) 
+					{
+						$vars[ $cell_name ][] = array( 'value' => $option );
+					}
+
+					$tagdata = $this->EE->TMPL->parse_variables( $tagdata, array($vars) );
+				}	
+			}
+		}
+
+		$data['tagdata'] = $tagdata;
 
 		return $data;
 	}

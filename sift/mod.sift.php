@@ -54,8 +54,9 @@ class Sift {
 	public function form()
 	{
 		$this->tagdata = $this->EE->TMPL->tagdata;
-
 		$this->tagdata = $this->_wrap_form( $this->tagdata );
+
+		$this->EE->sift_data_model->get_matrix_id( 'matrix_field');
 		return $this->tagdata;
 	}
 
@@ -133,7 +134,7 @@ class Sift {
 
 		// Parse tagdata
 		$t = $this->EE->TMPL->parse_variables(
-				$bare,
+				$tagdata,
 				array($data),
 				TRUE 
 			);

@@ -11,7 +11,6 @@
  */
 class Sift_data_model extends Sift_model {
 
-
 	// --------------------------------------------------------------------
 	// METHODS
 	// --------------------------------------------------------------------
@@ -72,12 +71,43 @@ class Sift_data_model extends Sift_model {
 		return 1;
 	}
 
+	public function get_cell_possible_values( $cell_id )
+	{
+		echo(' This still needs to be written to a persistent cache');
+		static $cell_possible_values;
+		if( isset( $cell_possible_values[ $cell_id ] ) ) return $cell_possible_values[ $cell_id ];
+
+		// Get all the unique values for this cell in the db.
+		// This can be quite intensive, so we'll cache this on the file system also
+
+		$sql = ' SELECT DISTINCT col_id_' . $cell_id . ' AS cell FROM exp_matrix_data ';
+		$res = $this->EE->db->query( $sql )->result_array();
+
+		$tmp = array();
+		foreach( $res as $row )
+		{
+			// Cleanup and flatten
+			$tmp[] = trim( $row['cell'] );
+		}
+
+		// Serialize and store in cache
+		$ser = serialize( $tmp );
+		// Write to cache
+		// @TODO
+
+		$cell_possible_values[ $cell_id ] = $tmp;
+
+		return $cell_possible_values[ $cell_id ];
+	}
+
 
 	public function get_matrix_field_name( $matrix_field_id = '' )
 	{
+		static $matrix_field_data;
+
 		if( $matrix_field_id == '' ) return FALSE;
 
-		// @TODO use cache here
+		if( isset( $matrix_field_data['id'][ $matrix_field_id ] ) ) return $matrix_field_data['id'][ $matrix_field_id ];
 
 		$row = $this->EE->db->where('field_id', $matrix_field_id)
 						->where('field_type', 'matrix')
@@ -85,18 +115,27 @@ class Sift_data_model extends Sift_model {
 						->get('channel_fields')
 						->row_array();
 
-		if( empty( $row ) ) return FALSE;
+		if( empty( $row ) ) $matrix_field_data['id'][ $matrix_field_id ] = FALSE;
+		else 
+		{
+			$matrix_field_data['id'][ $matrix_field_id ] = $row['field_name'];
 
-		// @TODO add to cache here
-		return $row['field_name'];
+			// Also set the opposite for completeness
+			$matrix_field_data['name'][ $row['field_name'] ] = $matrix_field_id;
+		}
+
+		return $matrix_field_data['id'][ $matrix_field_id ];
 	}
 
 
 	public function get_matrix_id( $matrix_field_name = '' )
 	{
+		static $matrix_field_data;
+
 		if( $matrix_field_name == '' ) return FALSE;
 
-		// @TODO use cache here
+		if( isset( $matrix_field_data['name'][ $matrix_field_name ] ) ) return $matrix_field_data['name'][ $matrix_field_name ];
+
 
 		$row = $this->EE->db->where('field_name', $matrix_field_name)
 						->where('field_type', 'matrix')
@@ -104,39 +143,55 @@ class Sift_data_model extends Sift_model {
 						->get('channel_fields')
 						->row_array();
 
-		if( empty( $row ) ) return FALSE;
+		if( empty( $row ) ) $matrix_field_data['name'][ $matrix_field_name ] = FALSE;
+		else 
+		{
+			$matrix_field_data['name'][ $matrix_field_name ] = $row['field_id'];
 
-		// @TODO add to cache here
-		return $row['field_id'];
+			// Also set the opposite for completeness
+			$matrix_field_data['id'][ $row['field_id'] ] = $matrix_field_name;
+		}
+
+		return $matrix_field_data['name'][ $matrix_field_name ];
 	}
 
 	public function get_cell_ids( $cell_names = array() )
 	{
 		if( empty( $cell_names ) ) return array();
 
+		die('this is hardcoded');
 		return array('cell_title'=> 1, 'cell_extra'=> 2);
 	}
 
 
 	public function get_cells_for_matrix( $matrix_field_id )
 	{
+		static $matrix_field_data;
+
+		if( isset( $matrix_field_data['cell'][ $matrix_field_id ] ) ) return $matrix_field_data['cell'][ $matrix_field_id ];
+
 		$res = $this->EE->db->where('field_id', $matrix_field_id)
 						->where('col_search', 'y')
 						->order_by('col_order','asc')
 						->get('matrix_cols')
 						->result_array();
-		if( empty( $res ) ) return FALSE;
+		if( empty( $res ) ) 
+		{
+			$matrix_field_data['cell'][ $matrix_field_id ] = FALSE;
+			return FALSE;
+		}
 
-		// @TODO cache things a bit
+
 
 		$return = array();
-
 		foreach( $res as $row )
 		{
 			$return[ $row['col_name'] ] = $row['col_id'];
 		}
 
-		return $return;
+		$matrix_field_data['cell'][ $matrix_field_id ] = $return;
+
+		return $matrix_field_data['cell'][ $matrix_field_id ];
 	}
 
 

@@ -14,7 +14,7 @@
 $config['app_version'] = '252';
 $config['install_lock'] = "";
 $config['license_number'] = '';
-$config['debug'] = '1';
+$config['debug'] = "1";
 $config['cp_url'] = 'http://sift.loc/system/index.php';
 $config['doc_url'] = 'http://expressionengine.com/user_guide/';
 $config['is_system_on'] = 'y';

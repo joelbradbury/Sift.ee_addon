@@ -8,25 +8,13 @@
 	    <input type="text" class="span1" placeholder="Title" name="col_id_1" value="{col_id_1}">
 	    
 
-	    <label for="cell_extra_one">
-		    <input type="checkbox" class="span1" name="cell_extra[]" id="cell_extra_one" value="Extra one"/>
-		    Extra One
-		</label>
-
+		<select name="cell_extra">
 		{cell_extra}
-		-{value}-
+		    <option value="{value}">{value}</option>
 		{/cell_extra}
+		</select>
 
 
-		<label for="cell_extra_two">
-		    <input type="checkbox" class="span1" name="cell_extra[]" id="cell_extra_two" value="Extra two"/>
-		    Extra Two
-		</label>
-
-		<label for="cell_extra_three">
-			<input type="checkbox" class="span1" name="cell_extra[]" id="cell_extra_three" value="Extra three"/>
-			Extra Three
-		</label>
 
 	    <label>
 		    <input type="checkbox" class="span1" name="seperate_matrix_rows" value="no" {if seperate_matrix_rows=='no'} checked="checked" {/if}> 
