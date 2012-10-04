@@ -68,12 +68,54 @@ class Sift_core_model extends Sift_model {
 
 	// --------------------------------------------------------------
 
+	public function setup_matrix_cell_data( $matrix_field, $tagdata )
+	{
+		$data = array('tagdata' => $tagdata );
+
+		// Check the field passed is valid
+		$matrix_field_id = $this->EE->sift_data_model->get_matrix_id( $matrix_field );	
+		if( $matrix_field_id === FALSE ) return FALSE;
+
+		// Now get the cells and possible values
+		$cells = $this->EE->sift_data_model->get_cells_for_matrix( $matrix_field_id );
+
+		// Setup a blank data array for blank population
+		$blank = array();
+		foreach( $cells as $cell_name => $cell_id )
+		{
+			$blank[ $cell_name ] = '';
+			$blank[ 'col_id_'.$cell_id ] = '';
+
+			
+			if ( preg_match("|" . LD . $cell_name . RD . "(.*)". LD . '/' . $cell_name . RD . "|s", $tagdata, $match))
+			{
+				// There is a match!
+				// Kick into collection and population mode
+				//$data['options'][ $cell_name ] = $this->EE->sift_data_model->get_cell_possible_values( $cell_name )
+			}		
+
+		}
+		$data['blanks'] = $blank;
+		
+
+		return $data;
+	}
+
+
+	// --------------------------------------------------------------
+
 	public function handle_get_post()
 	{	
 		$this->sift_data = array();
 
 		$this->_check_tmpl();
 		$this->_check_post();
+
+		// Clean it up for now
+		foreach( $this->sift_data as $key => $val ) 
+		{
+			if( is_array( $val ) ) unset( $this->sift_data[ $key ] );
+		}
 
 		return $this->sift_data;
 	}
@@ -270,8 +312,9 @@ class Sift_core_model extends Sift_model {
 
 
 		// Step two - check the logical states we want
-		$operator = ' LIKE ';
-		$grouper  = ' AND ';
+		$operator 		= ' LIKE ';
+		$grouper  		= ' AND ';
+		$subgrouper  	= ' OR ';
 
 		// Step three - build up the query
 		if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
@@ -281,7 +324,20 @@ class Sift_core_model extends Sift_model {
 		$cell_parts = array();
 		foreach( $this->ids['cells'] as $cell_id )
 		{
-			$cell_parts[] = ' col_id_'.$cell_id . $operator. '"%'.$this->search_data['cells'][ $cell_id ].'%" ';
+			if( is_array( $this->search_data['cells'][ $cell_id ] ) )
+			{
+				$tmp = array();
+				// Arrays get the sub-group treatment
+				foreach( $this->search_data['cells'][ $cell_id ] as $cell )
+				{	
+					$tmp[] = ' col_id_'.$cell_id . $operator. '"%'.$cell.'%" ';
+				}
+
+				// Implode and group the sub-group
+				if( count( $tmp > 0 ) )	$cell_parts[] = ' ( ' . implode( $subgrouper, $tmp ) . ' ) ';
+
+			}
+			else $cell_parts[] = ' col_id_'.$cell_id . $operator. '"%'.$this->search_data['cells'][ $cell_id ].'%" ';
 		}
 
 		$sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';

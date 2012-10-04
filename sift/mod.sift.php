@@ -87,6 +87,10 @@ class Sift {
 	*/
 	private function _wrap_form( $tagdata )
 	{
+
+		if( $this->EE->TMPL->fetch_param('matrix_field') == '' ) return $this->EE->TMPL->no_results;
+		$matrix_field = $this->EE->TMPL->fetch_param('matrix_field');
+
 		$data = $this->EE->sift_core_model->handle_get_post();
 
 
@@ -97,7 +101,8 @@ class Sift {
 		$form_id 	= $this->EE->TMPL->fetch_param('id');
 
 		// Get the action_id 
-		$action_url = '/search';
+		$action_url = $this->EE->functions->fetch_site_index(). '/search';
+		if( $this->EE->TMPL->fetch_param('return') != '' ) $action_url = $this->EE->TMPL->fetch_param('return'); 
 
 		$hidden = '<input type="hidden" name="sift_search" value="yes"/>';
 		$bare = "<form name='sift_form' id='".$form_id."' class='".$form_class."' method='post' action='".$action_url."'>";
@@ -107,7 +112,24 @@ class Sift {
 		$bare .= "</form>";
 
 
-		if( $data === FALSE ) $data = array('col_id_1'=>'', 'cell_extra'=>'');
+		// We need to get the raw cell data for this matrix field to allow
+		// various form value options
+		$matrix_data = $this->EE->sift_core_model->setup_matrix_cell_data( $matrix_field, $tagdata );
+		if( $matrix_data === FALSE ) return $this->EE->TMPL->no_results;
+
+		$tagdata = $matrix_data['tagdata'];
+
+
+		$data = array_merge( $data, $matrix_data['blanks'] );
+
+		// Is there a loop pair in the form? 
+		// If there is we need to get the possible values for a cell
+	//	$option_data = $this->EE->sift_core_model->get_options_matrix_cell_data( $blank_data );
+
+
+		// Populate with some defaults
+		//$defaults = array('seperate_matrix_rows' => 'no');
+		//$data = array_merge( $data, $defaults );
 
 		// Parse tagdata
 		$t = $this->EE->TMPL->parse_variables(
