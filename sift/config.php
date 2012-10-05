@@ -13,12 +13,11 @@ if ( ! defined('SIFT_NAME'))
 {
 	define('SIFT_NAME',         'Sift');
 	define('SIFT_CLASS_NAME',   'Sift');
-	define('SIFT_VERSION',      '0.1.1');
+	define('SIFT_VERSION',      '0.3');
 	define('SIFT_DOCS',         '##');
 	define('SIFT_DEBUG',        TRUE);
 	define('SIFT_CACHE_TIME',    900);
 
-	define('SIFT_PREFERENCES', 'pref_one|pref_two' );
 
 
 }
