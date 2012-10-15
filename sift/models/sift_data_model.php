@@ -73,10 +73,14 @@ class Sift_data_model extends Sift_model {
 
 	public function get_cell_possible_values( $cell_id )
 	{
-		echo(' This still needs to be written to a persistent cache');
+
 		static $cell_possible_values;
 		if( isset( $cell_possible_values[ $cell_id ] ) ) return $cell_possible_values[ $cell_id ];
 
+		// Check the persistent cache next
+		die('persistent cache here, but need to move the cache methods out of the _core_model into the parent model so the data model can access them');
+
+		
 		// Get all the unique values for this cell in the db.
 		// This can be quite intensive, so we'll cache this on the file system also
 
@@ -87,8 +91,13 @@ class Sift_data_model extends Sift_model {
 		foreach( $res as $row )
 		{
 			// Cleanup and flatten
-			$tmp[] = trim( $row['cell'] );
+			$str = trim( $row['cell'] );
+			if( $str != '' ) $tmp[] = $str;
 		}
+
+		// Now reorder the values
+		array_multisort($tmp);
+
 
 		// Serialize and store in cache
 		$ser = serialize( $tmp );

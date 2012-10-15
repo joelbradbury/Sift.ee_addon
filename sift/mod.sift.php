@@ -40,6 +40,8 @@ class Sift {
 		// Load other models
 		Sift_model::load_models();
 
+		ini_set('memory_limit', '512M');
+
 	}
 
 	public function view()
@@ -56,7 +58,7 @@ class Sift {
 		$this->tagdata = $this->EE->TMPL->tagdata;
 		$this->tagdata = $this->_wrap_form( $this->tagdata );
 
-		$this->EE->sift_data_model->get_matrix_id( 'matrix_field');
+		$this->EE->sift_data_model->get_matrix_id('matrix_field');
 		return $this->tagdata;
 	}
 
@@ -121,7 +123,7 @@ class Sift {
 		$tagdata = $matrix_data['tagdata'];
 
 
-		$data = array_merge( $data, $matrix_data['blanks'] );
+		$data = array_merge( $matrix_data['blanks'], $data );
 
 		// Is there a loop pair in the form? 
 		// If there is we need to get the possible values for a cell

@@ -17,6 +17,8 @@ class Sift_core_model extends Sift_model {
 	private $result_data;
 	private $tagdata;
 	private $matrix_field_name;
+	private $seperate_matrix_row_limit = 15;
+	private $cache_lifetime = 3600; // 12 hours
 
 	private $force_single_matrix_rows = TRUE;
 
@@ -132,6 +134,7 @@ class Sift_core_model extends Sift_model {
 
 		$this->_check_tmpl();
 		$this->_check_post();
+		$this->_check_get();
 
 		// Clean it up for now
 		foreach( $this->sift_data as $key => $val ) 
@@ -250,6 +253,11 @@ class Sift_core_model extends Sift_model {
 
 		if( $clean == FALSE ) return;
 
+		// This becomes expensive quick. so we'll only allow it when
+		// the local conditions allow. 
+		if( count( $this->result_data ) > $this->seperate_matrix_row_limit ) return;
+
+
 		// ok, we have something to actually do. This get's tricky fast
 		// we're tricking the matrix data to look like they're single rows
 		// for each duplicate entry by wrapping them in simple conditionals.
@@ -262,6 +270,7 @@ class Sift_core_model extends Sift_model {
 		$master = $matches[0];
 		$golden = '';
 		// As they'd say on MTV Cribs, this is where the magic happens
+
 		foreach( $this->result_data as $key => $row )
 		{
 			// Add a row_id: param the matrix_field id tagdata
@@ -282,6 +291,7 @@ class Sift_core_model extends Sift_model {
 		// Now replace the orginal master with our new golden master
 		$tagdata = str_replace( $master, $golden, $tagdata );
 
+		//die('<pre>-'.print_R($tagdata,1));
 		$this->EE->TMPL->tagdata = $tagdata;
 
 		return TRUE;
@@ -328,54 +338,163 @@ class Sift_core_model extends Sift_model {
 	*/
 	private function _perform_sift()
 	{
-		// Step one - get the various ids we'll need
-		$status = $this->_collect_ids();
-		if( $status === FALSE ) return FALSE;
-
-
-		// Step two - check the logical states we want
-		$operator 		= ' LIKE ';
-		$grouper  		= ' AND ';
-		$subgrouper  	= ' OR ';
-
-		// Step three - build up the query
-		if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
-		$sql = 'SELECT * FROM exp_matrix_data WHERE field_id = '.$this->ids['matrix_field_id'] . ' AND ';
-
-
-		$cell_parts = array();
-		foreach( $this->ids['cells'] as $cell_id )
+		if( $this->_check_cache('perform_sift', $this->sift_data, 'result_data' ) === FALSE )
 		{
-			if( is_array( $this->search_data['cells'][ $cell_id ] ) )
+
+			// Step one - get the various ids we'll need
+			$status = $this->_collect_ids();
+			if( $status === FALSE ) return FALSE;
+
+			// Step two - check the logical states we want
+			$operator 		= ' LIKE ';
+			$grouper  		= ' AND ';
+			$subgrouper  	= ' OR ';
+
+			// Step three - build up the query
+			if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
+			$sql = 'SELECT * FROM exp_matrix_data WHERE field_id = '.$this->ids['matrix_field_id'] . ' AND ';
+
+
+			$cell_parts = array();
+			foreach( $this->ids['cells'] as $cell_id )
 			{
-				$tmp = array();
-				// Arrays get the sub-group treatment
-				foreach( $this->search_data['cells'][ $cell_id ] as $cell )
-				{	
-					$tmp[] = ' col_id_'.$cell_id . $operator. '"%'.$cell.'%" ';
+				if( is_array( $this->search_data['cells'][ $cell_id ] ) )
+				{
+					$tmp = array();
+					// Arrays get the sub-group treatment
+					foreach( $this->search_data['cells'][ $cell_id ] as $cell )
+					{	
+						$tmp[] = ' col_id_'.$cell_id . $operator. '"%'.$cell.'%" ';
+					}
+
+					// Implode and group the sub-group
+					if( count( $tmp > 0 ) )	$cell_parts[] = ' ( ' . implode( $subgrouper, $tmp ) . ' ) ';
+
 				}
-
-				// Implode and group the sub-group
-				if( count( $tmp > 0 ) )	$cell_parts[] = ' ( ' . implode( $subgrouper, $tmp ) . ' ) ';
-
+				else $cell_parts[] = ' col_id_'.$cell_id . $operator. '"%'.$this->search_data['cells'][ $cell_id ].'%" ';
 			}
-			else $cell_parts[] = ' col_id_'.$cell_id . $operator. '"%'.$this->search_data['cells'][ $cell_id ].'%" ';
+
+			$sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';
+
+			$res = $this->EE->db->query( $sql )->result_array();
+
+			// No results (or bad query)
+			if( empty( $res ) ) return FALSE;
+
+
+			// Great! We have some actual matrix rows
+			// Now we need to actually pass them back up to the channel model
+			// and do something useful with them
+			// also cache perhaps
+
+			$this->result_data = $res;
+
+			// Write to the cache
+			$this->_write_cache('perform_sift',$this->sift_data, $this->result_data );
 		}
 
-		$sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';
+		return TRUE;
+	}
+	
+	// --------------------------------------------------------------------
 
-		$res = $this->EE->db->query( $sql )->result_array();
+	/* 
+	*  Writes to the cache
+	*/
+	private function _write_cache( $method, $filters = array(), $data = array() )
+	{
+		$this->EE->load->helper('file');
 
-		// No results (or bad query)
-		if( empty( $res ) ) return FALSE;
+		// Generate the name for the cache file
+		$name = $this->_cache_name( $method, $filters );
+		$cache_path = APPPATH . 'cache/' . SIFT_CLASS_NAME . '/';
+
+		if( $this->_check_cache_dir( $cache_path ) == FALSE ) return FALSE;
+
+		// Encode the data
+		$data = json_encode( $data );
+		if( ! write_file( $cache_path . $name , $data ) ) return FALSE;
+
+		return TRUE;
+	}
 
 
-		// Great! We have some actual matrix rows
-		// Now we need to actually pass them back up to the channel model
-		// and do something useful with them
-		// also cache perhaps
+	
+	// --------------------------------------------------------------------
 
-		$this->result_data = $res;
+	/* 
+	*  Checks the cache for a value, and optionally writes to local
+	*	variable before returning
+	*/
+	private function _check_cache( $method, $data = array(), $var_name = '' )
+	{
+		$this->EE->load->helper('file');
+
+		$name = $this->_cache_name( $method, $data );
+		
+		$cache_path = APPPATH . 'cache/' . SIFT_CLASS_NAME . '/';
+		if( $this->_check_cache_dir( $cache_path ) == FALSE ) return FALSE;
+
+		$cached_data = read_file( $cache_path . $name );
+		if( $cached_data === FALSE OR $cached_data == '' ) return FALSE;
+
+		// What is the age of the file?
+		$file_info = get_file_info( $cache_path . $name );
+		if( $file_info['date'] < ( $this->EE->localize->now - $this->cache_lifetime ) ) 
+		{
+			// caches live for only a little while, but burn so brightly
+			return FALSE;
+		}
+
+		// Decode the events json
+		$cached_data = $this->_obj_to_array( json_decode($cached_data) );
+
+		// Seems we have cache, write to our variable or return it
+		if( $var_name != '' ) $this->{$var_name} = $cached_data;
+		else return $cached_data;
+
+		return TRUE;
+	}
+
+	private function _cache_name( $method, $data = array() )
+	{
+		// Clear out the empty data points
+		$tmp = '';
+		foreach( $data as $key => $val )
+		{
+			if( trim( $val ) != '' ) 
+			{
+				if( $key == 'channel' ) $key = 'c';
+				elseif( $key == 'orderby' ) $key = 'o';
+				elseif( $key == 'matrix_field' ) $key = 'm';
+				$tmp .= $key.''.$val.'';
+			}
+
+		}
+		$data = base64_encode( $tmp );
+
+		// Generate the name for the cache file
+		$name = $method . '_' . $data;
+
+		return $name;
+	}
+
+
+	// --------------------------------------------------------------
+
+	/**
+	 * Checks the cache directories exist, and creates if needed
+	 *
+	 * @access      public
+	 * @return      void
+	 */
+	private function _check_cache_dir( $path = '')
+	{
+		if( ! is_dir( $path ) ) 
+		{
+			mkdir($path, DIR_WRITE_MODE);
+			@chmod($path, DIR_WRITE_MODE);	
+		}
 
 		return TRUE;
 	}
@@ -447,7 +566,12 @@ class Sift_core_model extends Sift_model {
 		}
 
 		// Nothing to do
-		if( empty( $passed_cells ) ) return FALSE;
+		$has_val = FALSE;
+		foreach( $passed_cells as $cell_val )
+		{
+			if( trim( $cell_val ) != '' ) $has_val = TRUE;
+		}
+		if( $has_val === FALSE ) return FALSE;
 
 
 
@@ -469,9 +593,8 @@ class Sift_core_model extends Sift_model {
 	*/
 	private function _validate_sift_data() 
 	{
-		$status = FALSE;
+		$status = FALSE;	
 
-		
 		/* 
 		* In addition to a basic existense check, we need to be sure
 		* the channel and matrix field's are really real, but 
@@ -567,6 +690,36 @@ class Sift_core_model extends Sift_model {
 
 		return FALSE;
 	}
+
+
+
+
+	private function _obj_to_array($obj, $clean = FALSE, $convert = array() ) 
+	{
+
+	    if(is_object($obj)) $obj = (array) $obj;
+
+	    if(is_array($obj)) {
+
+	        $new = array();
+
+	        foreach($obj as $key => $val) {
+
+	        	if( $clean ) 
+	        	{
+		        	$key = str_replace( '-', '_', $key );
+
+		        	if( isset( $convert[ $key ] ) ) $key = $convert[ $key ];
+		        }
+
+	            $new[$key] = $this->_obj_to_array($val, $clean);
+	        }
+	    }
+	    else $new = $obj;
+
+	    return $new;
+	}
+
 
 
 } // End class
