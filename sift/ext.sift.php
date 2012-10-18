@@ -167,14 +167,16 @@ class Sift_ext {
 
 	public function channel_entries_query_result( &$that, $query_result )
 	{
+		return $query_result;
+
 		if( isset( $that->is_sift ) AND $that->is_sift === TRUE )
 		{
-
 
 			// Drop a marker on the EE object to keep track of this 
 			// object loop
 			$this->EE->is_sift = TRUE;
 			$this->EE->sift_items = $that->sift_items;
+
 
 			// This special handling can be disabled via params, check our marker
 			if( isset( $that->sift_settings['seperate_rows'] ) AND $that->sift_settings['seperate_rows'] == FALSE )
@@ -218,7 +220,7 @@ class Sift_ext {
 				// 2. Reorder as required
 				foreach( $that->sift_order as $row )
 				{
-					$clean_array[] = $temp_array[ $row ];
+					if( isset( $temp_array[ $row ] ) ) $clean_array[] = $temp_array[ $row ];
 				}
 
 
@@ -231,21 +233,20 @@ class Sift_ext {
 
 	public function matrix_data_query( $that, $params, $sql, $select_mode)
 	{
-		if( isset( $that->EE->is_sift ) AND isset( $that->EE->sift_items ) ) 
+		if( isset( $that->EE->is_sift ) AND isset( $that->EE->sift->sift_items ) ) 
 		{
 			$marker = ' ORDER BY ';
 
 			$extra = array();
-			foreach( $that->EE->sift_items as $item )
+			foreach( $that->EE->sift->sift_items as $item )
 			{
 				$extra[] = $item['row_id'];
 			}
 			$extra_sql = ' AND row_id IN ('. implode(',', $extra).') ';
 
 			// Ok, rework the sql to just get the rows we know we need
-			$sql_new = str_replace( $marker, $extra_sql . $marker , $sql );
-			
-
+			$sql_new = str_replace( $marker, $extra_sql . $marker , $sql );			
+		
 			return $this->EE->db->query( $sql_new );
 		}
 

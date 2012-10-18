@@ -11,6 +11,8 @@
  */
 class Sift_data_model extends Sift_model {
 
+	public $cell_possible_values;
+
 	// --------------------------------------------------------------------
 	// METHODS
 	// --------------------------------------------------------------------
@@ -67,44 +69,71 @@ class Sift_data_model extends Sift_model {
 	{
 		if( $channel_name == '' ) return FALSE;
 
-		die('nope');
 		return 1;
 	}
 
 	public function get_cell_possible_values( $cell_id )
 	{
-
 		static $cell_possible_values;
 		if( isset( $cell_possible_values[ $cell_id ] ) ) return $cell_possible_values[ $cell_id ];
 
-		// Check the persistent cache next
-		die('persistent cache here, but need to move the cache methods out of the _core_model into the parent model so the data model can access them');
 
-		
-		// Get all the unique values for this cell in the db.
-		// This can be quite intensive, so we'll cache this on the file system also
-
-		$sql = ' SELECT DISTINCT col_id_' . $cell_id . ' AS cell FROM exp_matrix_data ';
-		$res = $this->EE->db->query( $sql )->result_array();
-
-		$tmp = array();
-		foreach( $res as $row )
+		if( $this->check_cache('get_cell_possible', array('cell_id'=>$cell_id), 'cell_possible_values' ) === FALSE )
 		{
-			// Cleanup and flatten
-			$str = trim( $row['cell'] );
-			if( $str != '' ) $tmp[] = $str;
+
+			// Check the persistent cache next
+			//die('persistent cache here, but need to move the cache methods out of the _core_model into the parent model so the data model can access them');
+
+			// Get this cell type from the matrix_cols table
+			$sql = " SELECT col_type, col_settings FROM exp_matrix_cols WHERE col_id = '".$cell_id."' ";
+			$cell = $this->EE->db->query( $sql )->row_array();
+			// Get all the unique values for this cell in the db.
+			// This can be quite intensive, so we'll cache this on the file system also
+
+			// Now depending on the col type we can try a few options to get this possible value data
+			//if( $cell['col_type'] == 'pt_checkboxes' )
+			if( $cell['col_type'] == 'pt_checkboxes' )
+			{
+				$settings = unserialize( base64_decode( $cell['col_settings'] ) );
+
+				// Directly use these settings for the possible values
+				if( isset( $settings['options'] ) )
+				{
+					$tmp = $settings['options'];
+				}
+			}
+			else
+			{
+				// Fallback to direct inspection
+				$sql = ' SELECT DISTINCT col_id_' . $cell_id . ' AS cell FROM exp_matrix_data ';
+				$res = $this->EE->db->query( $sql )->result_array();
+
+				$tmp = array();
+				foreach( $res as $row )
+				{
+					// Cleanup and flatten
+					$str = trim( $row['cell'] );
+					if( $str != '' ) $tmp[] = $str;
+				}
+
+				// Now reorder the values
+				array_multisort($tmp);
+			}
+			
+			// Serialize and store in cache
+			$ser = serialize( $tmp );
+			// Write to cache
+			// @TODO
+
+			$cell_possible_values[ $cell_id ] = $tmp;
+
+			// Write to the cache
+			$this->write_cache('get_cell_possible',array('cell_id'=>$cell_id), $tmp );
 		}
-
-		// Now reorder the values
-		array_multisort($tmp);
-
-
-		// Serialize and store in cache
-		$ser = serialize( $tmp );
-		// Write to cache
-		// @TODO
-
-		$cell_possible_values[ $cell_id ] = $tmp;
+		else
+		{
+			$cell_possible_values[ $cell_id ] = $this->cell_possible_values;
+		}
 
 		return $cell_possible_values[ $cell_id ];
 	}

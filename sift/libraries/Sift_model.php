@@ -21,6 +21,7 @@ class Sift_model extends CI_Model {
 	protected $EE;
 
 	private $_params = array();
+	private $cache_lifetime = 3600; // 12 hours
 
 
 	// --------------------------------------------------------------------
@@ -460,6 +461,137 @@ class Sift_model extends CI_Model {
 		}
     }
     /* END check_yes() */
+
+
+	
+	// --------------------------------------------------------------------
+
+	/* 
+	*  Checks the cache for a value, and optionally writes to local
+	*	variable before returning
+	*/
+	public function check_cache( $method, $data = array(), $var_name = '' )
+	{
+		$this->EE->load->helper('file');
+
+		$name = $this->_cache_name( $method, $data );
+		
+		$cache_path = APPPATH . 'cache/' . SIFT_CLASS_NAME . '/';
+		if( $this->_check_cache_dir( $cache_path ) == FALSE ) return FALSE;
+
+		$cached_data = read_file( $cache_path . $name );
+		if( $cached_data === FALSE OR $cached_data == '' ) return FALSE;
+
+		// What is the age of the file?
+		$file_info = get_file_info( $cache_path . $name );
+		if( $file_info['date'] < ( $this->EE->localize->now - $this->cache_lifetime ) ) 
+		{
+			// caches live for only a little while, but burn so brightly
+			return FALSE;
+		}
+
+		// Decode the events json
+		$cached_data = $this->_obj_to_array( json_decode($cached_data) );
+
+		// Seems we have cache, write to our variable or return it
+		if( $var_name != '' ) $this->{$var_name} = $cached_data;
+		else return $cached_data;
+
+		return TRUE;
+	}
+
+	private function _cache_name( $method, $data = array() )
+	{
+		// Clear out the empty data points
+		$tmp = '';
+		foreach( $data as $key => $val )
+		{
+			if( trim( $val ) != '' ) 
+			{
+				if( $key == 'channel' ) $key = 'c';
+				elseif( $key == 'orderby' ) $key = 'o';
+				elseif( $key == 'matrix_field' ) $key = 'm';
+				$tmp .= $key.''.$val.'';
+			}
+
+		}
+		$data = base64_encode( $tmp );
+
+		// Generate the name for the cache file
+		$name = $method . '_' . $data;
+
+		return $name;
+	}
+
+
+	// --------------------------------------------------------------
+
+	/**
+	 * Checks the cache directories exist, and creates if needed
+	 *
+	 * @access      public
+	 * @return      void
+	 */
+	private function _check_cache_dir( $path = '')
+	{
+		if( ! is_dir( $path ) ) 
+		{
+			mkdir($path, DIR_WRITE_MODE);
+			@chmod($path, DIR_WRITE_MODE);	
+		}
+
+		return TRUE;
+	}
+	
+	// --------------------------------------------------------------------
+
+	/* 
+	*  Writes to the cache
+	*/
+	public function write_cache( $method, $filters = array(), $data = array() )
+	{
+		$this->EE->load->helper('file');
+
+		// Generate the name for the cache file
+		$name = $this->_cache_name( $method, $filters );
+		$cache_path = APPPATH . 'cache/' . SIFT_CLASS_NAME . '/';
+
+		if( $this->_check_cache_dir( $cache_path ) == FALSE ) return FALSE;
+
+		// Encode the data
+		$data = json_encode( $data );
+		if( ! write_file( $cache_path . $name , $data ) ) return FALSE;
+
+		return TRUE;
+	}
+
+
+	private function _obj_to_array($obj, $clean = FALSE, $convert = array() ) 
+	{
+
+	    if(is_object($obj)) $obj = (array) $obj;
+
+	    if(is_array($obj)) {
+
+	        $new = array();
+
+	        foreach($obj as $key => $val) {
+
+	        	if( $clean ) 
+	        	{
+		        	$key = str_replace( '-', '_', $key );
+
+		        	if( isset( $convert[ $key ] ) ) $key = $convert[ $key ];
+		        }
+
+	            $new[$key] = $this->_obj_to_array($val, $clean);
+	        }
+	    }
+	    else $new = $obj;
+
+	    return $new;
+	}
+
 
 }
 // End of file Sift_model.php

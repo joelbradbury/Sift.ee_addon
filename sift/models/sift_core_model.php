@@ -14,11 +14,10 @@ class Sift_core_model extends Sift_model {
 	private $sift_data;
 	private $ids;
 	private $search_data;
-	private $result_data;
+	public $result_data;
 	private $tagdata;
 	private $matrix_field_name;
 	private $seperate_matrix_row_limit = 15;
-	private $cache_lifetime = 3600; // 12 hours
 
 	private $force_single_matrix_rows = TRUE;
 
@@ -171,7 +170,7 @@ class Sift_core_model extends Sift_model {
 
 		// Here would be a good place to check some cache 
 		// @TODO
-		// $this->_check_cache();
+		// $this->check_cache();
 
 		$status = $this->_validate_sift_data();
 		if( $status == FALSE ) 
@@ -218,7 +217,6 @@ class Sift_core_model extends Sift_model {
 		// check for the logic and flags first though
 		$this->_sift_matrix_tagdata();
 
-
 		$this->tagdata = $this->_pass_to_channel( $entry_ids, $this->result_data );
 
 		return TRUE;
@@ -256,7 +254,6 @@ class Sift_core_model extends Sift_model {
 		// This becomes expensive quick. so we'll only allow it when
 		// the local conditions allow. 
 		if( count( $this->result_data ) > $this->seperate_matrix_row_limit ) return;
-
 
 		// ok, we have something to actually do. This get's tricky fast
 		// we're tricking the matrix data to look like they're single rows
@@ -306,6 +303,7 @@ class Sift_core_model extends Sift_model {
 			require PATH_MOD.'channel/mod.channel'.EXT;
 		}
 
+		$settings = array('seperate_rows' => $this->force_single_matrix_rows );
 
 		$channel = new Channel;
 
@@ -313,14 +311,21 @@ class Sift_core_model extends Sift_model {
 		$this->EE->TMPL->tagparams['entry_id'] = implode( '|', $entry_ids);
 		$this->EE->TMPL->tagparams['fixed_order'] = implode( '|', $entry_ids);
 		$this->EE->TMPL->tagparams['dynamic_parameters'] = FALSE;
-
+		$this->EE->TMPL->tagparams['limit'] = '10';
 
 		// Add our markers to the channel object, so that the sift ext
 		// can jump in later and clean this up a bit
+		$this->EE->is_sift = TRUE;
 		$channel->is_sift = TRUE;
+
+		$this->EE->sift->sift_items = $items;
 		$channel->sift_items = $items;
+
+		$this->EE->sift->sift_order = $entry_ids;
 		$channel->sift_order = $entry_ids;
-		$channel->sift_settings = array('seperate_rows' => $this->force_single_matrix_rows );
+
+		$this->EE->sift->settings = $settings;
+		$channel->sift_settings = $settings;
 
 		$t = $channel->entries();
 
@@ -338,7 +343,7 @@ class Sift_core_model extends Sift_model {
 	*/
 	private function _perform_sift()
 	{
-		if( $this->_check_cache('perform_sift', $this->sift_data, 'result_data' ) === FALSE )
+		if( $this->check_cache('perform_sift', $this->sift_data, 'result_data' ) === FALSE )
 		{
 
 			// Step one - get the various ids we'll need
@@ -348,7 +353,7 @@ class Sift_core_model extends Sift_model {
 			// Step two - check the logical states we want
 			$operator 		= ' LIKE ';
 			$grouper  		= ' AND ';
-			$subgrouper  	= ' OR ';
+			$subgrouper  	= ' AND ';
 
 			// Step three - build up the query
 			if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
@@ -364,14 +369,17 @@ class Sift_core_model extends Sift_model {
 					// Arrays get the sub-group treatment
 					foreach( $this->search_data['cells'][ $cell_id ] as $cell )
 					{	
-						$tmp[] = ' col_id_'.$cell_id . $operator. '"%'.$cell.'%" ';
+						if( trim( $cell ) != '' ) $tmp[] = ' col_id_'.$cell_id . $operator. '"%'.$cell.'%" ';
 					}
 
 					// Implode and group the sub-group
 					if( count( $tmp > 0 ) )	$cell_parts[] = ' ( ' . implode( $subgrouper, $tmp ) . ' ) ';
 
 				}
-				else $cell_parts[] = ' col_id_'.$cell_id . $operator. '"%'.$this->search_data['cells'][ $cell_id ].'%" ';
+				else
+				{
+					if( trim( $this->search_data['cells'][ $cell_id ] ) != '' ) $cell_parts[] = ' col_id_'.$cell_id . $operator. '"%'.$this->search_data['cells'][ $cell_id ].'%" ';
+				}
 			}
 
 			$sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';
@@ -390,114 +398,12 @@ class Sift_core_model extends Sift_model {
 			$this->result_data = $res;
 
 			// Write to the cache
-			$this->_write_cache('perform_sift',$this->sift_data, $this->result_data );
+			$this->write_cache('perform_sift',$this->sift_data, $this->result_data );
 		}
 
 		return TRUE;
 	}
-	
-	// --------------------------------------------------------------------
 
-	/* 
-	*  Writes to the cache
-	*/
-	private function _write_cache( $method, $filters = array(), $data = array() )
-	{
-		$this->EE->load->helper('file');
-
-		// Generate the name for the cache file
-		$name = $this->_cache_name( $method, $filters );
-		$cache_path = APPPATH . 'cache/' . SIFT_CLASS_NAME . '/';
-
-		if( $this->_check_cache_dir( $cache_path ) == FALSE ) return FALSE;
-
-		// Encode the data
-		$data = json_encode( $data );
-		if( ! write_file( $cache_path . $name , $data ) ) return FALSE;
-
-		return TRUE;
-	}
-
-
-	
-	// --------------------------------------------------------------------
-
-	/* 
-	*  Checks the cache for a value, and optionally writes to local
-	*	variable before returning
-	*/
-	private function _check_cache( $method, $data = array(), $var_name = '' )
-	{
-		$this->EE->load->helper('file');
-
-		$name = $this->_cache_name( $method, $data );
-		
-		$cache_path = APPPATH . 'cache/' . SIFT_CLASS_NAME . '/';
-		if( $this->_check_cache_dir( $cache_path ) == FALSE ) return FALSE;
-
-		$cached_data = read_file( $cache_path . $name );
-		if( $cached_data === FALSE OR $cached_data == '' ) return FALSE;
-
-		// What is the age of the file?
-		$file_info = get_file_info( $cache_path . $name );
-		if( $file_info['date'] < ( $this->EE->localize->now - $this->cache_lifetime ) ) 
-		{
-			// caches live for only a little while, but burn so brightly
-			return FALSE;
-		}
-
-		// Decode the events json
-		$cached_data = $this->_obj_to_array( json_decode($cached_data) );
-
-		// Seems we have cache, write to our variable or return it
-		if( $var_name != '' ) $this->{$var_name} = $cached_data;
-		else return $cached_data;
-
-		return TRUE;
-	}
-
-	private function _cache_name( $method, $data = array() )
-	{
-		// Clear out the empty data points
-		$tmp = '';
-		foreach( $data as $key => $val )
-		{
-			if( trim( $val ) != '' ) 
-			{
-				if( $key == 'channel' ) $key = 'c';
-				elseif( $key == 'orderby' ) $key = 'o';
-				elseif( $key == 'matrix_field' ) $key = 'm';
-				$tmp .= $key.''.$val.'';
-			}
-
-		}
-		$data = base64_encode( $tmp );
-
-		// Generate the name for the cache file
-		$name = $method . '_' . $data;
-
-		return $name;
-	}
-
-
-	// --------------------------------------------------------------
-
-	/**
-	 * Checks the cache directories exist, and creates if needed
-	 *
-	 * @access      public
-	 * @return      void
-	 */
-	private function _check_cache_dir( $path = '')
-	{
-		if( ! is_dir( $path ) ) 
-		{
-			mkdir($path, DIR_WRITE_MODE);
-			@chmod($path, DIR_WRITE_MODE);	
-		}
-
-		return TRUE;
-	}
 
 	// --------------------------------------------------------------------
 
@@ -692,33 +598,6 @@ class Sift_core_model extends Sift_model {
 	}
 
 
-
-
-	private function _obj_to_array($obj, $clean = FALSE, $convert = array() ) 
-	{
-
-	    if(is_object($obj)) $obj = (array) $obj;
-
-	    if(is_array($obj)) {
-
-	        $new = array();
-
-	        foreach($obj as $key => $val) {
-
-	        	if( $clean ) 
-	        	{
-		        	$key = str_replace( '-', '_', $key );
-
-		        	if( isset( $convert[ $key ] ) ) $key = $convert[ $key ];
-		        }
-
-	            $new[$key] = $this->_obj_to_array($val, $clean);
-	        }
-	    }
-	    else $new = $obj;
-
-	    return $new;
-	}
 
 
 
