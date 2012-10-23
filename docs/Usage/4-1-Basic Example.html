@@ -1,0 +1,61 @@
+<h2>Basic Example</h2>
+
+<p>Simply using the <strong>sift:form</strong> and <strong>sift:results</strong> tags to build the simplest of matrix searches.</p>
+
+
+<h3>Showing the Search Form</h3>
+<pre><code>&#123;<em>exp:sift:form</em>
+	matrix_field="product_options"&#125;
+	&lt;input type="text" name="cell_one" <em>value="&#123;cell_one&#125;</em>/&gt;
+	&lt;input type="submit" value="Sift"/&gt;
+&#123;/<em>exp:sift:form</em>&#125;</code></pre>
+
+<p>Will give you something like this :</p>
+
+<pre><code>&lt;<em>form class="form-search" method="get" action="/search"</em>&gt;
+	&lt;input type="text" name="cell_one" <em>value=""</em>/&gt;
+	&lt;input type="submit" value="Sift"/&gt;
+&lt;<em>/form</em>&gt;</code></pre>
+
+<p>The <em>value</em> tag will be replaced with the previously passed search term, if there was one passed, or a blank string otherwise. The other half of the setup is the view tag:</p>
+
+
+<h3>Showing the Results</h3>
+
+
+<pre><code>&lt;h1&gt;Sift Results&lt;/h1&gt;
+&#123;<em>exp:sift:view</em> matrix_field="product_options"&#125;
+	&lt;h2&gt;&#123;title&#125;&lt;/h2&gt;
+	&lt;ul&gt;
+	<em>&#123;product_options&#125;</em>
+		<em>&lt;li&gt;&#123;cell_one&#125;&lt;/li&gt;</em>
+	<em>&#123;/product_options&#125;</em>
+	&lt;/ul&gt;
+&#123;/<em>exp:sift:view</em>&#125;</code></pre>
+
+<p>Will give you something like this :</p>
+
+<pre><code>&lt;h1&gt;Sift Results&lt;/h1&gt;
+
+&lt;h2&gt;Entry One&lt;/h2&gt;
+&lt;ul&gt;
+	<em>&lt;li&gt;Matrix Cell Value One&lt;/li&gt;</em>
+	<em>&lt;li&gt;Matrix Cell Value Two&lt;/li&gt;</em>
+	<em>&lt;li&gt;Matrix Cell Value Three&lt;/li&gt;</em>
+&lt;/ul&gt;
+
+&lt;h2&gt;Entry Two&lt;/h2&gt;
+&lt;ul&gt;
+	<em>&lt;li&gt;Matrix Cell Alternative One&lt;/li&gt;</em>
+	<em>&lt;li&gt;Matrix Cell Alternative Three&lt;/li&gt;</em>
+&lt;/ul&gt;
+
+..</code></pre>
+
+<p class="note"><strong>Note:</strong> Notice that the in the results view only the matrix rows that match the search terms are returned. They've been sifted if you will.</p>
+
+<p>That's all there is too it! The resulting rows in the matrix field displayed are only those that match the passed search term.</p>
+
+<p class="note"><strong>Note:</strong> You can search on all the columns in a matrix field at the same time. Simply pass the columns as seperatly named inputs. Searches are performed <strong>inclusively</strong>.</p>
+
+
