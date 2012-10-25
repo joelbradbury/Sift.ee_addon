@@ -328,7 +328,6 @@ class Sift_core_model extends Sift_model {
 
 	private function _pass_to_channel( $entry_ids = array(), $items = array() ) 
 	{
-//		die('<prE>'.print_R($this->EE->TMPL->tagdata,1));
 		if ( class_exists('Channel') === FALSE )
 		{
 			require PATH_MOD.'channel/mod.channel'.EXT;
