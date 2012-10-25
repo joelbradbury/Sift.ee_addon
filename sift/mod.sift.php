@@ -41,6 +41,7 @@ class Sift {
 		Sift_model::load_models();
 
 		ini_set('memory_limit', '512M');
+		ini_set('memory_limit', '1024M');
 
 	}
 
@@ -74,7 +75,7 @@ class Sift {
 		if( $return === FALSE ) 
 		{
 			// Something was invalid in the search set
-			$this->tagdata = $this->EE->TMPL->no_results; //ie('invalid search');
+			$this->tagdata = $this->EE->TMPL->no_results(); //ie('invalid search');
 		}
 		$this->tagdata = $return;
 
@@ -124,15 +125,6 @@ class Sift {
 
 
 		$data = array_merge( $matrix_data['blanks'], $data );
-
-		// Is there a loop pair in the form? 
-		// If there is we need to get the possible values for a cell
-	//	$option_data = $this->EE->sift_core_model->get_options_matrix_cell_data( $blank_data );
-
-
-		// Populate with some defaults
-		//$defaults = array('seperate_matrix_rows' => 'no');
-		//$data = array_merge( $data, $defaults );
 
 		// Parse tagdata
 		$t = $this->EE->TMPL->parse_variables(

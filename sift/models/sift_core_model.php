@@ -14,12 +14,16 @@ class Sift_core_model extends Sift_model {
 	private $sift_data;
 	private $ids;
 	private $search_data;
-	public $result_data;
+	public 	$result_data;
 	private $tagdata;
 	private $matrix_field_name;
-	private $seperate_matrix_row_limit = 15;
-
-	private $force_single_matrix_rows = TRUE;
+	private $seperate_matrix_row_limit = 25;
+	private $specials = array(	'category', 
+								'limit', 
+								'loose_ends', 
+									'loose_ends_on', 
+									'loose_ends_off');
+	private $force_single_matrix_rows = FALSE;
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -175,6 +179,7 @@ class Sift_core_model extends Sift_model {
 		$status = $this->_validate_sift_data();
 		if( $status == FALSE ) 
 		{
+
 			/* Something failed the validation, we're not going 
 			* 	to even try to do any searching, return False 
 			*/
@@ -213,13 +218,33 @@ class Sift_core_model extends Sift_model {
 			$entry_ids[] = $row['entry_id'];
 		}
 
+
 		// We need to cleanup and add some magic dust to the matrix pair
 		// check for the logic and flags first though
 		$this->_sift_matrix_tagdata();
 
 		$this->tagdata = $this->_pass_to_channel( $entry_ids, $this->result_data );
 
+		$this->_add_variables();
+
 		return TRUE;
+	}
+
+	private function _add_variables()
+	{
+		$vars['total_rows'] = count( $this->result_data );
+
+		$tmp = array();
+		foreach( $this->result_data as $row )
+		{
+			$tmp[ $row['entry_id'] ] = 1;
+		}
+
+		$vars['total_unique_results'] = count( $tmp );
+
+		$this->tagdata = $this->EE->TMPL->parse_variables( $this->tagdata, array( $vars ), FALSE );
+
+		return;
 	}
 
 
@@ -227,6 +252,7 @@ class Sift_core_model extends Sift_model {
 
 	private function _sift_matrix_tagdata()
 	{
+
 		if( $this->force_single_matrix_rows === FALSE ) return;
 
 		// Do we actually _need_ to do anything?
@@ -268,27 +294,31 @@ class Sift_core_model extends Sift_model {
 		$golden = '';
 		// As they'd say on MTV Cribs, this is where the magic happens
 
+		$cond_tmp = array();
+
 		foreach( $this->result_data as $key => $row )
 		{
-			// Add a row_id: param the matrix_field id tagdata
-			$old_start = LD.$matrix_field_name;
-			$append_start = ' row_id="'. $row['row_id'].'"';
-
-			$master_row = str_replace( $old_start, $old_start . $append_start, $master);
-
 			$i = $key + 1;
-			$tmp = ' ' . LD . 'if count=='. $i .RD;
-			$tmp .= $master_row;
-			$tmp .= LD . '/if' . RD;
-
-			$golden .= ' ' . $tmp;
+			$cond_tmp[] = 'count=='.$i.' AND row_id=='.$row['row_id'];
 		}
+
+		// Build the conditional
+		$cond = LD.'if ('.implode( ') OR (', $cond_tmp ).')'.RD;
+
+		// Drop an {if ..} inside the wrapping matrix_field markers
+		$old_start 		= LD.$matrix_field_name.RD;
+		$old_end		= LD.'/'.$matrix_field_name.RD;
+
+		$cond_end 	= LD.'/if'.RD.' ';
+
+		$master_row 	= str_replace( $old_start, $old_start.$cond, $master);
+		$golden 	= str_replace( $old_end, $cond_end.$old_end, $master_row);
+
 
 		// Magic!
 		// Now replace the orginal master with our new golden master
 		$tagdata = str_replace( $master, $golden, $tagdata );
 
-		//die('<pre>-'.print_R($tagdata,1));
 		$this->EE->TMPL->tagdata = $tagdata;
 
 		return TRUE;
@@ -298,6 +328,7 @@ class Sift_core_model extends Sift_model {
 
 	private function _pass_to_channel( $entry_ids = array(), $items = array() ) 
 	{
+//		die('<prE>'.print_R($this->EE->TMPL->tagdata,1));
 		if ( class_exists('Channel') === FALSE )
 		{
 			require PATH_MOD.'channel/mod.channel'.EXT;
@@ -307,11 +338,22 @@ class Sift_core_model extends Sift_model {
 
 		$channel = new Channel;
 
+		$this->EE->TMPL->tagparams['limit'] = '25';
+
+		// Allow our specials to override
+		foreach( $this->specials as $key )
+		{
+			if( isset( $this->sift_data[ $key ] ) AND $this->sift_data[ $key ] != '' )
+			{
+				$this->EE->TMPL->tagparams[ $key ] = $this->sift_data[ $key ];
+			}
+		}
+
 		$this->EE->TMPL->tagparams['dynamic'] = FALSE;
 		$this->EE->TMPL->tagparams['entry_id'] = implode( '|', $entry_ids);
 		$this->EE->TMPL->tagparams['fixed_order'] = implode( '|', $entry_ids);
 		$this->EE->TMPL->tagparams['dynamic_parameters'] = FALSE;
-		$this->EE->TMPL->tagparams['limit'] = '10';
+		unset( $this->EE->TMPL->tagparams['orderby'] );
 
 		// Add our markers to the channel object, so that the sift ext
 		// can jump in later and clean this up a bit
@@ -343,17 +385,35 @@ class Sift_core_model extends Sift_model {
 	*/
 	private function _perform_sift()
 	{
+		// Step one - get the various ids we'll need
+		$status = $this->_collect_ids();
+		if( $status === FALSE ) return FALSE;
+
 		if( $this->check_cache('perform_sift', $this->sift_data, 'result_data' ) === FALSE )
 		{
-
-			// Step one - get the various ids we'll need
-			$status = $this->_collect_ids();
-			if( $status === FALSE ) return FALSE;
-
 			// Step two - check the logical states we want
 			$operator 		= ' LIKE ';
 			$grouper  		= ' AND ';
 			$subgrouper  	= ' AND ';
+
+			// Allow the loose ends to be overridden
+			$loose 			= '%';
+			if( isset( $this->sift_data['loose_ends'] ) AND $this->check_no( $this->sift_data['loose_ends'] ) )
+			{
+				$loose = '';
+			}
+			$loose_ends_on = array();
+			$loose_ends_off = array();
+			if( isset( $this->sift_data['loose_ends_on'] ) )
+			{
+				$loose_ends_on = explode( '|', $this->sift_data['loose_ends_on'] );
+			}
+
+			if( isset( $this->sift_data['loose_ends_off'] ) )
+			{
+				$loose_ends_off = explode( '|', $this->sift_data['loose_ends_off'] );
+			}
+
 
 			// Step three - build up the query
 			if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
@@ -369,7 +429,18 @@ class Sift_core_model extends Sift_model {
 					// Arrays get the sub-group treatment
 					foreach( $this->search_data['cells'][ $cell_id ] as $cell )
 					{	
-						if( trim( $cell ) != '' ) $tmp[] = ' col_id_'.$cell_id . $operator. '"%'.$cell.'%" ';
+						if( trim( $cell ) != '' ) 
+						{
+
+							// Per cell, loose on/off also
+							if( $loose == '' )
+							{
+								if( in_array( $this->ids['cell_ids'][ $cell_id ], $loose_ends_on ) ) $loose = '%';
+							}
+							elseif( in_array( $this->ids['cell_ids'][ $cell_id ], $loose_ends_off ) ) $loose = '';
+
+							$tmp[] = ' col_id_'.$cell_id . $operator. '"'.$loose.$cell.$loose.'" ';
+						}
 					}
 
 					// Implode and group the sub-group
@@ -378,13 +449,55 @@ class Sift_core_model extends Sift_model {
 				}
 				else
 				{
-					if( trim( $this->search_data['cells'][ $cell_id ] ) != '' ) $cell_parts[] = ' col_id_'.$cell_id . $operator. '"%'.$this->search_data['cells'][ $cell_id ].'%" ';
+					if( trim( $this->search_data['cells'][ $cell_id ] ) != '' ) 
+					{
+						// Per cell loose ends on/off
+						if( $loose == '' )
+						{
+							if( in_array( $this->ids['cell_ids'][ $cell_id ], $loose_ends_on ) ) $loose = '%';
+						}
+						elseif( in_array( $this->ids['cell_ids'][ $cell_id ], $loose_ends_off ) ) $loose = '';
+
+
+						$cell_parts[] = ' col_id_'.$cell_id . $operator. '"'.$loose.$this->search_data['cells'][ $cell_id ].$loose.'" ';
+					}
 				}
 			}
 
 			$sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';
 
+			// Add orderby and sort params
+			if( isset( $this->sift_data['orderby'] ) AND $this->sift_data['orderby'] != '' )
+			{
+				$sort = 'asc';
+
+				$sort_order = explode(":", $this->sift_data['orderby'] );
+				if( count( $sort_order > 1 ) )
+				{
+					if( strtolower($sort_order[1]) == 'desc' ) $sort = 'desc';
+				}
+
+
+				// Allow multiple sort fields, seperated by pipes
+				$sort_fields = explode( "|", $this->sift_data['orderby'] );
+				$sort_tmp = array();
+
+				foreach( $sort_fields as $col_name )
+				{
+					if( isset( $this->ids['cell_names'][ $col_name ] ) )
+					{
+						$sort_tmp[] = 'col_id_'.$this->ids['cell_names'][ $col_name ];
+					}
+				}
+
+				if( !empty( $sort_tmp ) )
+				{
+					$sql .= ' ORDER BY ' . implode(", ", $sort_tmp) . $sort;
+				}
+			}
+
 			$res = $this->EE->db->query( $sql )->result_array();
+
 
 			// No results (or bad query)
 			if( empty( $res ) ) return FALSE;
@@ -414,7 +527,6 @@ class Sift_core_model extends Sift_model {
 	*/
 	private function _collect_ids()
 	{
-
 		// At a minimum all we need is the matrix field id
 		// That can be supplied as either : 
 		//  matrix_field_name or matrix_field_id 
@@ -455,6 +567,10 @@ class Sift_core_model extends Sift_model {
 			return FALSE;
 		}
 
+		// Cache these cell names
+		$this->ids['cell_names'] = $possible_cells;
+		$this->ids['cell_ids'] = array_flip($possible_cells);
+
 		// Now we can cleanup and just get the search data for the cells that are possible
 		$passed_cells = array();
 		foreach( $possible_cells as $cell_name => $cell_id )
@@ -468,8 +584,8 @@ class Sift_core_model extends Sift_model {
 			{
 				$passed_cells[ $cell_id ] = $this->sift_data[ $cell_name ];
 			}
-
 		}
+
 
 		// Nothing to do
 		$has_val = FALSE;
@@ -509,17 +625,15 @@ class Sift_core_model extends Sift_model {
 		*/
 
 		// Overrides for the default settings
-		if( isset( $this->sift_data[ 'seperate_matrix_rows' ] ) )
+		if( isset( $this->sift_data[ 'seperate_view' ] ) )
 		{
-			if( $this->check_no( $this->sift_data['seperate_matrix_rows'] ) )
+			if( $this->check_yes( $this->sift_data['seperate_view'] ) )
 			{
-				$this->force_single_matrix_rows = FALSE;
+				$this->force_single_matrix_rows = TRUE;
 			}
 		}
 
-		// @TODO more validation bits can be added here
 		return TRUE;
-
 	}
 
 	// --------------------------------------------------------------------
@@ -584,6 +698,18 @@ class Sift_core_model extends Sift_model {
 			if( isset( $this->sift_data[ $key ] ) ) continue;
 
 			$this->sift_data[ $key ] = $val;
+		}
+
+		// Also have a look for any special parameters
+		foreach( $this->specials as $key )
+		{
+			if( isset( $raw[ $key ] ) )
+			{					
+				// Don't allow overrides from post data (for now)
+				if( isset( $this->sift_data[ $key ] ) ) continue;
+
+				$this->sift_data[ $key ] = $raw[ $key ];
+			}
 		}
 	}
 
