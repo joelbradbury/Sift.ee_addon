@@ -1,0 +1,48 @@
+{exp:ct_admin:product_totals seller_id="CURRENT_USER" product_id="{segment_6}" month="{segment_4}" year="{segment_3}" day="{segment_7}"}
+	Total Items Sold: {items_sold}<br />
+	Gross Sales: {gross_sales}<br />
+{/exp:ct_admin:product_totals}
+
+<br /><br />
+<table border="0" cellspacing="0" cellpadding="0" width="90%">
+<thead>
+<tr>
+	<th align="left">Product</th><th align="left">Quantity</th><th align="left">Unit Price</th><th align="left">Total Price</th>
+</tr>
+</thead>
+<tbody>
+{exp:ct_admin:product_sum_report seller_id="{segment_5}" product_id="{segment_6}" month="{segment_4}" year="{segment_3}" day="{segment_7}"} 
+	{if no_results}
+		<tr><td colspan="4">No Results</td></tr>
+	{/if}
+	<tr>
+		<td>{title}</td><td>{total_quantity}</td><td>{unit_price}</td><td>{total_price}</td>
+	</tr>
+{/exp:ct_admin:product_sum_report}
+</tbody>
+</table>
+
+
+<br /><br />
+<table border="0" cellspacing="0" cellpadding="0" width="90%">
+<thead>
+<tr>
+	<th align="left">Item</th><th align="left">Price</th><th align="left">Purchased</th><th align="left">License Key</th><th align="left">Customer</th>
+</tr>
+</thead>
+<tbody>
+<!-- 
+NOTE: that the below templates tags include the custom field tags used for the Orders channel
+Be sure to use the tags specific for your system if they don't match the below.
+Also, NO custom fields have been tested so only output fields with plain text output unless you know what you're doing
+ -->
+{exp:ct_admin:purchased_products seller_id="{segment_5}" product_id="{segment_6}" month="{segment_4}" year="{segment_3}" day="{segment_7}"} 
+{if no_results}
+	<tr><td colspan="5">No Results</td></tr>
+{/if}
+<tr>
+	<td>{product_title}</td><td>{price}</td><td>{entry_date format="%Y-%m-%d"}</td><td>{devotee_license_key}</td><td>{order_billing_first_name} {order_billing_last_name}</td>
+</tr>
+{/exp:ct_admin:purchased_products}
+</tbody>
+</table>

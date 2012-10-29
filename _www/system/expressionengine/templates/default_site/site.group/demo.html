@@ -1,0 +1,88 @@
+{embed="inc/_head"}
+	
+
+<!-- Grid system
+================================================== -->
+<section>
+	
+	<div class="row">
+		<div class="span3">
+			<h2>Search</h2>
+			<p>Use <strong>Sift</strong> to search through matrix rows.</p>
+
+			<form class="form-search" method="get" action="/search">
+
+			  	<div class="control-group">
+
+					
+					<select name="height_i" class="span3">
+						<option value="">Height I</option>
+						{height_i}
+						    <option value="{value}" {if value=='{height_i}'}selected="selected"{/if}>{value}</option>
+						{/height_i}
+					</select>
+				    <label class="span3">
+					    <input type="checkbox" class="span1" name="seperate_matrix_rows" value="no" {if seperate_matrix_rows=='no'} checked="checked" {/if}> 
+					    Don't seperate rows
+					</label>
+			    </div>
+
+			    <button type="submit" class="btn search-query">Search</button>
+			</form>
+
+			
+		</div>
+
+		<div class="span9">
+			<h2>Entries</h2>
+
+			{exp:channel:entries 
+				dynamic="no" 
+				channel="tyres"
+				limit="10"}
+
+				<h4>#{entry_id} {title}</h4>				
+				
+				<table class="table table-bordered table-striped">
+	              <thead>
+	                <tr>
+	                  <th>Width m</th>
+	                  <th>Profile</th>
+	                  <th>Diameter</th>
+	                  <th>Load Speed</th>
+	                  <th>Height I</th>
+	                  <th>Width I</th>
+	                  <th>Ply</th>
+	                  <th>Price</th>
+	                </tr>
+	              </thead>
+	              <tbody>
+	              	{tyre_options}
+	              	<tr>
+	              		<td>{width_m}</td>
+	              		<td>{profile}</td>
+	              		<td>{diameter}</td>
+	              		<td>{load_speed}</td>
+	              		<td>{height_i}</td>
+	              		<td>{width_i}</td>
+	              		<td>{ply}</td>
+	              		<td>{price}</td>
+	              	</tr>
+	              	{/tyre_options}
+	              </tbody>
+	            </table>
+		        <hr/>
+
+			{/exp:channel:entries}
+
+
+
+		</div>
+		
+	</div>
+</section>
+
+
+<hr class="soften">
+
+{embed="inc/_foot"}

@@ -1956,7 +1956,7 @@ class Matrix_ft extends EE_Fieldtype {
 		else
 		{
 			// is this a required field?
-			if ($this->settings['field_required'] == 'y')
+			if (isset($this->settings['field_required']) && $this->settings['field_required'] == 'y')
 			{
 				return lang('required');
 			}
@@ -3125,11 +3125,20 @@ class Matrix_ft extends EE_Fieldtype {
 			$endtag = LD.'/'.$field_name.(isset($matches[2][0]) ? $matches[2][0] : '').RD;
 			$endtag_len = strlen($endtag);
 			$endtag_pos = strpos($tagdata, $endtag, $tagdata_pos);
-			$tag_func = (isset($matches[3][0]) && $matches[3][0]) ? 'replace_'.$matches[3][0] : '';
+			$modifier = !empty($matches[3][0]) ? $matches[3][0] : 'tag';
+			$tag_func = 'replace_'.$modifier;
 
-			if (! $tag_func) $tag_func = 'replace_tag';
 			$class = $this->_get_celltype_class($field['type'], TRUE);
 			$method_exists = method_exists($class, $tag_func);
+			$use_catchall = FALSE;
+
+			if (! $method_exists)
+			{
+				// Does the celltype have a 'catchall' tag?
+				$tag_func = 'replace_tag_catchall';
+				$method_exists = method_exists($class, $tag_func);
+				$use_catchall = TRUE;
+			}
 
 			if ($method_exists)
 			{
@@ -3157,7 +3166,14 @@ class Matrix_ft extends EE_Fieldtype {
 					$celltype->$key = $value;
 				}
 
-				$new_tagdata = (string) $celltype->$tag_func($field['data'], $params, $field_tagdata);
+				if ($use_catchall)
+				{
+					$new_tagdata = (string) $celltype->$tag_func($field['data'], $params, $field_tagdata, $modifier);
+				}
+				else
+				{
+					$new_tagdata = (string) $celltype->$tag_func($field['data'], $params, $field_tagdata);
+				}
 			}
 			else
 			{

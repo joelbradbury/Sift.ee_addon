@@ -1,0 +1,52 @@
+{embed="inc/_head"}
+	
+
+<!-- Grid system
+================================================== -->
+<section>
+	<div class="page-header">
+		<h1>Overview <small>what this prototype shows</small></h1>
+		<p>This prototype is used to show and test functionality for the <strong>Sift</strong> addon.</p>
+	</div>
+	<div class="row">
+		<div class="span3">
+			<h2>Search</h2>
+			<p>Use <strong>Sift</strong> to search through matrix rows.</p>
+
+			{embed="inc/_search_form"}
+
+		</div>
+		<div class="span9">
+			
+
+			{exp:sift:view
+				channel="main"
+				orderby="row"
+				matrix_field="matrix_field"}
+
+				{if count==1}<h2>Sifted Entries <small>{total_results} result{if total_results>1}s{/if}</small></h2>{/if}
+
+				<h4>#{entry_id} {title}</h4>
+				<table class="table table-bordered table-striped">
+	              <tbody>
+	              	{matrix_field test_param='test_param'}
+	              	<tr>
+	              		<td>{cell_title}</td>
+	              		<td>{cell_extra}</td>
+	              	</tr>
+	              	{/matrix_field}
+	              </tbody>
+	            </table>
+
+
+			{/exp:sift:view}
+
+			
+		</div>
+	</div>
+</section>
+
+
+<hr class="soften">
+
+{embed="inc/_foot"}

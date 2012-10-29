@@ -20,5 +20,3 @@ $db['expressionengine']['cachedir'] = '/Users/joelbradbury/Sites/client/Sift.ee_
 
 /* End of file database.php */
 /* Location: ./system/expressionengine/config/database.php */
-
-require(realpath(dirname(__FILE__) . '/../config_bootstrap.php'));

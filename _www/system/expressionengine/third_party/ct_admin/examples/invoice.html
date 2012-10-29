@@ -1,0 +1,179 @@
+{exp:ct_admin:invoice order_id="{segment_3}"} 
+
+	{if no_results}
+		Can't find invoice :(
+	{/if}
+	
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- 
+NOTE: that the below templates tags include the custom field tags used for the Orders channel
+Be sure to use the tags specific for your system if they don't match the below.
+Also, NO custom fields have been tested so only output fields with plain text output unless you know what you're doing
+ -->
+
+<title>{title}</title>
+<style>
+body, td, th, input, select, textarea, option, optgroup {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+h1 {
+	text-transform: uppercase;
+	color: #CCCCCC;
+	text-align: right;
+	font-size: 24px;
+	font-weight: normal;
+	padding-bottom: 5px;
+	margin-top: 0px;
+	margin-bottom: 15px;
+	border-bottom: 1px solid #CDDDDD;
+}
+.content-wrap {
+	width: 100%;
+	margin-bottom: 20px;
+}
+.heading td {
+	background: #ECF1F4;
+}
+.address, .product {
+	border-collapse: collapse;
+}
+.address {
+	width: 100%;
+	margin-bottom: 20px;
+	border-top: 1px solid #CDDDDD;
+	border-right: 1px solid #CDDDDD;
+}
+.address th, .address td {
+	border-left: 1px solid #CDDDDD;
+	border-bottom: 1px solid #CDDDDD;
+	padding: 5px;
+}
+.address td {
+	width: 50%;
+}
+.product {
+	width: 100%;
+	margin-bottom: 20px;
+	border-top: 1px solid #CDDDDD;
+	border-right: 1px solid #CDDDDD;
+}
+.product td {
+	border-left: 1px solid #CDDDDD;
+	border-bottom: 1px solid #CDDDDD;
+	padding: 5px;
+}
+
+</style>
+</head>
+<body>
+<div style="page-break-after: always;">
+  <h1>Invoice: #{order_transaction_id}</h1>
+  <div class="content-wrap">
+    <table width="100%">
+      <tr>
+        <td>
+        	{site_name}<br />
+			{webmaster_email}<br />
+          	{site_url}
+        </td>
+        <td align="right" valign="top"><table>
+            <tr>
+              <td><b>Order Date:</b></td>
+              <td>{entry_date format="%M %d, %Y, %g:%i:%s%A"}</td>
+            </tr>
+            <tr>
+              <td><b>Order Transaction ID</b></td>
+              <td>
+              	#{order_transaction_id}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <table class="address">
+    <tr class="heading">
+      <td width="50%"><b>To</b></td>
+      {if order_shipping_first_name != ''}
+      <td width="50%"><b>Ship To</b></td>
+      {/if}
+    </tr>
+    <tr>
+      <td>
+        {order_billing_first_name} {order_billing_last_name}<br />
+        {if order_billing_address}{order_billing_address}<br />{/if}
+        {if order_billing_address2}{order_billing_address2}<br />{/if}
+        {if order_billing_city}{order_billing_city}, {order_billing_state} {order_billing_zip}<br/>{/if}
+        {order_customer_email}
+      </td>
+      {if order_shipping_first_name != ''}
+      <td>
+        {order_shipping_first_name} {order_shipping_last_name}<br />
+        {order_shipping_address}<br />
+        {order_shipping_address2}<br />
+        {order_shipping_city}, {order_shipping_state} {order_shipping_zip}
+      </td>
+      {/if}
+    </tr>
+  </table>
+  <table class="product">
+    <tr class="heading">
+      <td><b>Product</b></td>
+      <td align="right"><b>Quantity</b></td>
+      <td align="right"><b>Unit Price</b></td>
+      <td align="right"><b>Total</b></td>
+    </tr>
+    
+	{order_items}
+    
+    <tr>
+      <td>
+      {item_title}
+      	{if is_package}
+      		<br /><small>Package Items: 
+      	{/if}
+      	{sub_items}
+      		{sub_item_title} ({sub_item_quantity})
+      	{/sub_items}
+      	{if is_package}
+      		</small> 
+      	{/if}      	 
+      </td>
+      <td align="right">{item_quantity}</td>
+      <td align="right">{item_price}</td>
+      <td align="right">{item_total_price}</td>
+    </tr>		
+	{/order_items}
+    <tr>
+      <td align="right" colspan="3"><b>Sub-Total:</b></td>
+      <td align="right">{order_subtotal}</td>
+    </tr>
+     <tr>
+      <td align="right" colspan="3"><b>Shipping:</b></td>
+
+      <td align="right">{order_shipping}</td>
+    </tr>
+    <tr>
+      <td align="right" colspan="3"><b>Tax:</b></td>
+      <td align="right">{order_tax}</td>
+    </tr>
+    <tr>
+      <td align="right" colspan="3"><b>Discount:</b></td>
+      <td align="right">{order_discount}</td>
+    </tr>    
+    <tr>
+      <td align="right" colspan="3"><b>Total:</b></td>
+      <td align="right">{order_total}</td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>	
+
+{/exp:ct_admin:invoice}

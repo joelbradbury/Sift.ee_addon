@@ -20,24 +20,46 @@
 			
 
 			{exp:sift:view
-				channel="main"
-				orderby="row"
-				matrix_field="matrix_field"}
+				channel="tyres"
+				orderby="width_m:asc"
+				matrix_field="tyre_options"
+				loose_ends="no"
+			}
 
-				{if count==1}<h2>Sifted Entries <small>{total_results} result{if total_results>1}s{/if}</small></h2>{/if}
-
-				<h4>#{entry_id} {title}</h4>
+				{if count==1}<h2>Sifted Entries <small>{total_results} result{if total_results>1}s{/if}, {total_rows} row{if total_rows>1}s{/if}, {total_unique_results} unqiue entries</small></h2>{/if}
+				
+				<h4>({count}) : #{entry_id} {title}</h4>				
+				
 				<table class="table table-bordered table-striped">
+	              <!--<thead>
+	                <tr>
+	                  <th>Width m</th>
+	                  <th>Profile</th>
+	                  <th>Diameter</th>
+	                  <th>Load Speed</th>
+	                  <th>Height I</th>
+	                  <th>Width I</th>
+	                  <th>Ply</th>
+	                  <th>Price</th>
+	                </tr>
+	              </thead>-->
 	              <tbody>
-	              	{matrix_field test_param='test_param'}
+	              	{tyre_options}
 	              	<tr>
-	              		<td>{cell_title}</td>
-	              		<td>{cell_extra}</td>
+	              		<td>{row_id}</td>
+	              		<td>{width_m}</td>
+	              		<td>{profile}</td>
+	              		<td>{diameter}</td>
+	              		<td>{load_speed}</td>
+	              		<td>{height_i}</td>
+	              		<td>{width_i}</td>
+	              		<td>{ply}</td>
+	              		<td>{price}</td>
 	              	</tr>
-	              	{/matrix_field}
+	              	{/tyre_options}
 	              </tbody>
 	            </table>
-
+		        <hr/>
 
 			{/exp:sift:view}
 

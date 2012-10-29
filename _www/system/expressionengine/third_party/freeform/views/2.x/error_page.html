@@ -1,0 +1,21 @@
+<?php echo $this->view('header.html');?>
+
+<table class='mainTable' id="solspaceTable" style='width:100%;' cellspacing='0'  cellpadding='0'  border='0' >
+	<thead>
+		<tr>
+			<th><?=ee()->lang->line('error');?></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="odd">
+			<td>
+				<p><?=$error_message?></p>
+				<div class='clearfix'>
+				<strong><a href='javascript:history.go(-1)' style='text-transform:uppercase;'>&#171; <?=ee()->lang->line('back')?></a></strong>
+				</div>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+<?php echo $this->view('footer.html'); ?>

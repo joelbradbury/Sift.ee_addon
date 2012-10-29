@@ -1,24 +1,109 @@
 
 {exp:sift:form
 	return="/search"
-	matrix_field="matrix_field"}
+	matrix_field="tyre_options"}
+
 <form class="form-search" method="get" action="/search">
 
   	<div class="control-group">
-	    <input type="text" class="span1" placeholder="Title" name="col_id_1" value="{col_id_1}">
-	    
 
-		<select name="cell_extra">
-		{cell_extra}
-		    <option value="{value}">{value}</option>
-		{/cell_extra}
+		<select name="width_m" class="span3">Width M
+			<option value="">Width M</option>
+			{width_m}
+			    <option value="{value}" {if value=='{width_m}'}selected="selected"{/if}>{value}</option>
+			{/width_m}
+		</select>
+		
+		<select name="profile" class="span3">
+			<option value="">Profile</option>
+			{profile}
+			    <option value="{value}" {if value=='{profile}'}selected="selected"{/if}>{value}</option>
+			{/profile}
+		</select>
+
+		<select name="diameter" class="span3">
+			<option value="">Diameter</option>
+			{diameter}
+			    <option value="{value}" {if value=='{diameter}'}selected="selected"{/if}>{value}</option>
+			{/diameter}
+		</select>
+
+		<select name="load_speed" class="span3">
+			<option value="">Load Speed</option>
+			{load_speed}
+			    <option value="{value}" {if value=='{load_speed}'}selected="selected"{/if}>{value}</option>
+			{/load_speed}
+		</select>
+
+		<select name="height_i" class="span3">
+			<option value="">Height I</option>
+			{height_i}
+			    <option value="{value}" {if value=='{height_i}'}selected="selected"{/if}>{value}</option>
+			{/height_i}
+		</select>
+
+		<select name="width_i" class="span3">
+			<option value="">Width I</option>
+			{width_i}
+			    <option value="{value}" {if value=='{width_i}'}selected="selected"{/if}>{value}</option>
+			{/width_i}
+		</select>
+
+		<select name="price" class="span3">
+			<option value="">Price</option>
+			{price}
+			    <option value="{value}" {if value=='{price}'}selected="selected"{/if}>{value}</option>
+			{/price}
 		</select>
 
 
 
-	    <label>
-		    <input type="checkbox" class="span1" name="seperate_matrix_rows" value="no" {if seperate_matrix_rows=='no'} checked="checked" {/if}> 
-		    Don't seperate rows
+		<select name="ply" class="span3">
+			<option value="">Ply</option>
+			{ply}
+			    <option value="{value}" {if value=='{ply}'}selected="selected"{/if}>{value}</option>
+			{/ply}
+		</select>
+
+		<select name="pcd_new" class="span3">
+			<option value="">PCD New</option>
+			{pcd_new}
+			    <option value="{value}" {if value=='{pcd_new}'}selected="selected"{/if}>{value}</option>
+			{/pcd_new}
+		</select>
+
+
+
+		<select name="category" class="span3">
+			<option value="">Categories</option>
+			{exp:channel:categories channel="wheels|tyres" group_id="1"}
+			    <option value="{category_id}">{category_name}</option>
+			{/exp:channel:categories}
+		</select>
+
+
+
+		<select name="limit" class="span3">
+			<option value="">Limit</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="20">20</option>
+			<option value="99">99</option>			
+		</select>
+
+
+		<select name="orderby" class="span3">
+			<option value="">Sort By</option>
+			<option value="width_m">Width M</option>
+			<option value="height_m">Height M</option>
+			<option value="ply">Ply</option>
+		</select>
+
+
+
+	    <label class="span3">
+		    <input type="checkbox" class="span1" name="seperate_view" value="yes" {if seperate_view=='yes'} checked="checked" {/if}> 
+		    Seperate Rows
 		</label>
     </div>
 
