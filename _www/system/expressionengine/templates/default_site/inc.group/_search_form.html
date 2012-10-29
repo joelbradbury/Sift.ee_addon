@@ -3,8 +3,6 @@
 	return="/search"
 	matrix_field="tyre_options"}
 
-<form class="form-search" method="get" action="/search">
-
   	<div class="control-group">
 
 		<select name="width_m" class="span3">Width M
@@ -83,6 +81,24 @@
 
 
 
+		<select name="category_group_1" class="span3">
+			<option value="">Categories</option>
+			{exp:channel:categories channel="wheels" cat_group="1"}
+			    <option value="{category_id}">{category_name}</option>
+			{/exp:channel:categories}
+		</select>
+
+
+
+		<select name="category_group_3" class="span3">
+			<option value="">Categories</option>
+			{exp:channel:categories channel="tyres" group_id="1"}
+			    <option value="{category_id}">{category_name}</option>
+			{/exp:channel:categories}
+		</select>
+
+
+
 		<select name="limit" class="span3">
 			<option value="">Limit</option>
 			<option value="1">1</option>
@@ -108,5 +124,4 @@
     </div>
 
     <button type="submit" class="btn search-query">Search</button>
-</form>
 {/exp:sift:form}
