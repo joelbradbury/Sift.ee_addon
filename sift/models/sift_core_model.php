@@ -186,6 +186,9 @@ class Sift_core_model extends Sift_model {
 			return FALSE;
 		}
 
+		// Log these search terms as cookies for the user
+		$this->_save_params();
+
 		// Ok, it seems good, now try and do some real search 
 		$status = $this->_perform_sift();
 		if( $status == FALSE ) return FALSE;
@@ -198,6 +201,11 @@ class Sift_core_model extends Sift_model {
 		if( $status == FALSE ) return FALSE;
 
 		return $this->tagdata;
+	}
+
+	private function _save_params()
+	{
+		die('<pre>'.print_R($this->sift_data,1));
 	}
 
 	
@@ -491,7 +499,7 @@ class Sift_core_model extends Sift_model {
 
 				if( !empty( $sort_tmp ) )
 				{
-					$sql .= ' ORDER BY ' . implode(", ", $sort_tmp) . $sort;
+					$sql .= ' ORDER BY ' . implode(", ", $sort_tmp) . " " . $sort;
 				}
 			}
 
