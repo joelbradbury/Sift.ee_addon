@@ -49,6 +49,7 @@ class Sift {
 	{
 		$this->tagdata = $this->EE->TMPL->tagdata;
 
+		$this->_prep_no_results();
 		$this->_handle_search();
 
 		return $this->tagdata;
@@ -75,9 +76,12 @@ class Sift {
 		if( $return === FALSE ) 
 		{
 			// Something was invalid in the search set
-			$this->tagdata = $this->EE->TMPL->no_results(); //ie('invalid search');
+			$this->tagdata = $this->EE->TMPL->no_results; //ie('invalid search');
 		}
-		$this->tagdata = $return;
+		else
+		{
+			$this->tagdata = $return;
+		}
 
 		return TRUE;
 	}
@@ -97,19 +101,18 @@ class Sift {
 
 		$data = $this->EE->sift_core_model->handle_get_post();
 
-
-		$form_class = ' ';
-		$form_id = ' ';
-
 		$form_class = $this->EE->TMPL->fetch_param('class');
 		$form_id 	= $this->EE->TMPL->fetch_param('id');
+
+		$form_class = $form_class != '' ? ' class='.$form_class : '';
+		$form_id = $form_id == '' ? ' id='.$form_id : '';
 
 		// Get the action_id 
 		$action_url = $this->EE->functions->fetch_site_index(). '/search';
 		if( $this->EE->TMPL->fetch_param('return') != '' ) $action_url = $this->EE->TMPL->fetch_param('return'); 
 
 		$hidden = '<input type="hidden" name="sift_search" value="yes"/>';
-		$bare = "<form name='sift_form' id='".$form_id."' class='".$form_class."' method='post' action='".$action_url."'>";
+		$bare = "<form name='sift_form'". $form_class . $form_id ." method='post' action='".$action_url."'>";
 
 		$bare .= $hidden;
 		$bare .= $tagdata;
@@ -118,7 +121,7 @@ class Sift {
 
 		// We need to get the raw cell data for this matrix field to allow
 		// various form value options
-		$matrix_data = $this->EE->sift_core_model->setup_matrix_cell_data( $matrix_field, $tagdata );
+		$matrix_data = $this->EE->sift_core_model->setup_matrix_cell_data( $matrix_field, $bare );
 		if( $matrix_data === FALSE ) return $this->EE->TMPL->no_results;
 
 		$tagdata = $matrix_data['tagdata'];
@@ -134,6 +137,32 @@ class Sift {
 			);
 			
 		return $t;
+	}
+
+	private function _prep_no_results()
+	{
+		// Shortcut to tagdata
+		$td    =& $this->EE->TMPL->tagdata;
+		$open  = "if no_sift_results";
+		$close = '/if';
+
+		// Check if there is a custom no_results conditional
+		if (strpos($td, $open) !== FALSE && preg_match('#' .LD .$open .RD .'(.*?)' .LD .$close .RD .'#s', $td, $match))
+		{
+		    $this->EE->TMPL->log_item("Prepping {$open} conditional");
+
+		    // Check if there are conditionals inside of that
+		    if (stristr($match[1], LD.'if'))
+		    {
+		      	$match[0] = $this->EE->functions->full_tag($match[0], $td, LD.'if', LD.'\/if'.RD);
+		    }
+
+		    // Set template's no_results data to found chunk
+		    $this->EE->TMPL->no_results = substr($match[0], strlen(LD.$open.RD), -strlen(LD.$close.RD));
+
+		    // Remove no_results conditional from tagdata
+		    $td = str_replace($match[0], '', $td);
+		}
 	}
 
 }

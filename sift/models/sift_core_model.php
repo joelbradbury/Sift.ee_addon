@@ -19,6 +19,7 @@ class Sift_core_model extends Sift_model {
 	private $matrix_field_name;
 	private $seperate_matrix_row_limit = 25;
 	private $specials = array(	'category', 
+								'category_group_',
 								'limit', 
 								'loose_ends', 
 									'loose_ends_on', 
@@ -138,6 +139,8 @@ class Sift_core_model extends Sift_model {
 		$this->_check_tmpl();
 		$this->_check_post();
 		$this->_check_get();
+		$this->_check_cookie();
+
 
 		// Clean it up for now
 		foreach( $this->sift_data as $key => $val ) 
@@ -205,8 +208,23 @@ class Sift_core_model extends Sift_model {
 
 	private function _save_params()
 	{
-		die('<pre>'.print_R($this->sift_data,1));
+		$tmpl_params = $this->EE->TMPL->tagparams;
+
+		$passed = array_diff( $this->sift_data, $this->EE->TMPL->tagparams );
+		if( empty( $passed ) ) return;
+
+		// Drop each of these into it's own cookie
+		foreach( $passed as $key => $val )
+		{
+			$data['name'] = $key;
+			$data['value'] = $val;
+			$this->EE->sift_cookie_model->set( $data );
+		}
+
+		// done
+		return;
 	}
+
 
 	
 	// --------------------------------------------------------------------
@@ -640,8 +658,36 @@ class Sift_core_model extends Sift_model {
 			}
 		}
 
+		/*
+		*
+		* We let users pass category groups in seperate fields
+		* by using the field name category_group_# , or category_group_#_#_#
+		*
+		* We need to split these out here, and drop them into the combined 
+		* category param for later passing over to the channel model
+		*/
+		function category_group_split( $var )
+		{
+			if( strpos( $var, 'category_group_' ) > -1 ) return $var;
+		}
+
+		$cats = array_filter( array_keys( $this->sift_data ), 'category_group_split' ); 
+		$cats = array_intersect_key( $this->sift_data, array_flip( $cats ) );
+		
+		if( !empty( $cats ) ) 
+		{
+			// We have some cats, re-assign 
+			$current = array();
+			if( isset( $this->sift_data['category'] ) ) $current[] = $this->sift_data['category'];
+			$current = array_merge( $current, $cats );
+
+			$tmp = implode( '&', $current );
+			if( $tmp != '' ) $this->sift_data['category'] = $tmp;
+		}
+
 		return TRUE;
 	}
+
 
 	// --------------------------------------------------------------------
 
@@ -654,6 +700,17 @@ class Sift_core_model extends Sift_model {
 		$this->sift_data = $this->EE->TMPL->tagparams;
 	}
 
+	
+	private function _check_cookie()
+	{
+		$all = $this->EE->sift_cookie_model->all();
+
+		if( empty( $all ) ) return;
+
+		$this->_clean_and_assign_params( $all );
+	}
+
+	// ----------------
 	// --------------------------------------------------------------------
 	
 	/* 

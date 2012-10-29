@@ -87,6 +87,7 @@ class Sift_model extends CI_Model {
 
 		$EE->load->model("sift_core_model");
 		$EE->load->model("sift_data_model");
+		$EE->load->model("sift_cookie_model");
 	}
 
 	// --------------------------------------------------------------------
