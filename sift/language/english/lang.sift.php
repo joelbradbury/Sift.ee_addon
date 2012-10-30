@@ -3,7 +3,7 @@
 $lang = array(
 
 	'sift_module_name'			=> 'Sift',
-	'sift_module_description'	=> 'A bare addon sift for building quicker addons',
+	'sift_module_description'	=> 'Search and filter your Matrix fields'
 
 
 );

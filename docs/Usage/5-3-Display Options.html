@@ -1,0 +1,25 @@
+<h2>Display Options</h2>
+<p>Switch up the results display. </p>
+
+<p>Wouldn't things be boring if we didn't switch up the display once in a while? The <strong>sift:view</strong> tag gives all the control of the <strong>channel:entries</strong> tag, but with some tweaks. There's the <a href="#standard">Standard View</a> and more the interesting <a href="#seperated">Seperated View</a>.</p>
+
+<h3>Switching between the views</h3>
+<p>By default sift uses the <strong>standard view</strong>. To switch to the <strong>seperated view</strong> pass the parameter '<em>seperated_view="yes"</em>' on the <strong>sift:view</strong> tag, or as an input of the same name in the <strong>sift:form</strong> tag.</p>
+
+
+<h3 id="standard">Standard View</h3>
+<p>Have you used the <strong>channel:entries</strong> tag? Yes? Good. Then you know what the standard view is like. All the same tags on the channel:entries tags will work on the <strong>sift:view</strong> tag, and the output is broadly the same.</p>
+<p>The one change is the way the matrix rows are sifted down. Not only does sift filter down the entries returned, it also removes any matrix rows from the results that don't match your sift search. </p>
+
+<p>The upshot of this is - the matrix loop simply doesn't know about any non-matching rows. To your matrix field, it's as if they don't exist. Great if you're wanting to limit the view on a product to only relevant options.</p>
+
+<h3 id="seperated">Seperated View</h3>
+<p>The seperated view is slightly different. This time, instead of simply showing entries and row's that match the search, <strong>each matching matrix row behaves as it's own entry</strong>. What? I know, crazy right?</p>
+
+<p>The simplest way to explain the behavious is with a diagram:</p>
+
+<h3>DIAGRAM HERE</h3>
+
+<p><strong>BOOM</strong></p>
+
+<p class="note"><strong>Note:</strong> The seperated view can be quite memory intensive when the results set is large. When dealing with lots of entries, with lots of matrix rows, things quickly add up. ie. 50 results, with 20 rows each, is 1000 seperated entries. To keep things performant the seperated view is internally limited to only be avaialble when the result set contains 25 or less items. When above this limit, the standard view will be used.</p>

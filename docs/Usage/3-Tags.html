@@ -11,6 +11,10 @@
 </dl>
 
 
+
+<p class="note"><strong>Note:</strong> In addition to the parameters listed below, check the <a href="/sift/docs/parameters#content">Full Parameters List</a> for all the parameters you can pass. These paramters can be passed as form inputs in the <strong>sift:form</strong> tag, and also as paramters on the <strong>sift:view</strong> tag.</p>
+
+
 <h3 class="tag" id="tag-form">&#123;exp:sift:form&#125;</h3>
 <p>This is the form wrapper tag. Use it to easily create a search form for users to use. Also it will give you options for pre-population and valid input values if required.</p>
 
@@ -65,23 +69,41 @@
 	<dd>The name of the matrix field to search on</dd>
 
 	<dt><code>cell_name</code> (where '<em>cell_name</em>' is the name of a cell to search on)</dt>
-	<dd>Alternative way to specify search values. Effectively the same as passing a search form with the same value</dd>
+	<dd>Alternative way to specify search values. Effectively the same as passing a search form with the same value.
+		<p class="">eg. <code>cell_one="blue"</code> would search on the <code>cell_one</code> cell for a value of <code>blue</code>.</p>
+	</dd>
+	<dt><code>seperate_view</code></dt>
+	<dd>Defaults to 'no'. Pass a value of 'yes' to split out the matrix row results between entries. <a href="/sift/docs/display-options#content">More information about the seperated view</a></dd>
 
-	<dt><code>seperate_matrix_rows</code></dt>
-	<dd>Defaults to 'no'. Set to yes to keep matrix rows together across the same entry</dd>
 
 	<dt><code>channel</code></dt>
-	<dd>Channel to limit searches to</dd>
+	<dd>Channel to limit searches to. This can be useful if you're sharing your field groups over multiple channels.</dd>
 
 	<dt><code>limit</code></dt>
-	<dd>The result limit for the search</dd>
+	<dd>The number of results to return for the search. Paginate your results as standard.</dd>
+
+	<dt><code>orderby</code></dt>
+	<dd>The custom <strong>matrix cell</strong> to order results by.</dd>
+
+	<dt><code>sort</code></dt>
+	<dd>The sort order used on the results. Defaults to 'asc'</dd>
+
+
 </dl>
 <p class="note"><strong>Note:</strong> The <strong>:view</strong> tag is really a channel:entries tag in disguise. Most of the same parameters and variables from the standard entries loop also work here</p>
 
 <h4>Tag Variables</h4>
-<p>The <strong>:view</strong> tag has all the standard entry, field and loop variables as the channel:entries tag. All your normal field variables will work here as normal.</p>
+<p>The <strong>:view</strong> tag has all the standard entry, field and loop variables as the channel:entries tag. All your normal field variables will work here as normal. In addition to those the following extra variables are available:</p>
 
-<p>Use your normal markup to access your matrix field's rows. Sift will automatically rework the output to only output the matrix rows that match the searched terms. If the 'seperate_matrix_rows="yes"' param was passed this tag pair will create a loop for each single row. </p>
+<dl>
+	<dt><code>&#123;total_rows&#125;</code></dt>
+	<dd>The total number of matrix rows returned. Similar to the standard &#123;total_results&#125; but counting rows instead of just entries</dd>
+
+	<dt><code>&#123;total_unique_entries&#125;</code></dt>
+	<dd>The total number of unique entries returned. Useful when in <em>seperate_view</em> to get the count of different entries, not just the total row count.</dd>
+</dl>
+
+<p>Use your normal markup to access your matrix field's rows. Sift will automatically rework the output to only output the matrix rows that match the searched terms. If the 'seperate_view="yes"' param was passed this tag pair will create a loop for each single row. </p>
 
 <p class="note"><strong>Note:</strong> Seperating the matrix rows into seperate entries is limited to when there are less than 25 results in from the search. This is done to keep the results tag snappy. More than that, and it can run into performance issues.</p>
 

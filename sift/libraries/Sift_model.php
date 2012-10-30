@@ -546,6 +546,25 @@ class Sift_model extends CI_Model {
 	
 	// --------------------------------------------------------------------
 
+	public function empty_caches()
+	{
+		$this->EE->load->helper('file');
+
+		// Generate the name for the cache file
+		$cache_path = APPPATH . 'cache/' . SIFT_CLASS_NAME . '/';
+
+		//if the cache directory doesn't exist, consider the cache cleared
+		if ( ! is_dir( $cache_path ) )
+		{
+			return TRUE;
+		}
+
+		//delete files and directories
+		delete_files( $cache_path, TRUE );
+
+		return TRUE;
+	}
+
 	/* 
 	*  Writes to the cache
 	*/

@@ -4,7 +4,7 @@
  * Sift Data Model class
  *
  * @package         sift_ee_addon
- * @version         0.1
+ * @version         1.0
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/sift
  * @copyright       Copyright (c) 2012, Joel 
@@ -51,27 +51,10 @@ class Sift_data_model extends Sift_model {
 	 */
 	public function install()
 	{
-		// Call parent install
-		//parent::install();
-
-		// Add indexes to table
-		//$this->EE->db->query("ALTER TABLE {$this->table()} ADD INDEX (`site_id`)");
+		// Nothing to install
 	}
 
-	/*
-		
-		$channel_id 		= $this->EE->sift_data_model->get_channel_id( $channel );
-		$matrix_field_id	= $this->SS->sift_data_model->get_matrix_id( $matrix_field );
-		$cell_ids 			= $this->EE->sift_data_model->get_cell_ids( $cell_names );*/
-
-
-	public function get_channel_id( $channel_name = '' )
-	{
-		if( $channel_name == '' ) return FALSE;
-
-		return 1;
-	}
-
+	
 	public function get_cell_possible_values( $cell_id )
 	{
 		static $cell_possible_values;
@@ -122,8 +105,6 @@ class Sift_data_model extends Sift_model {
 			
 			// Serialize and store in cache
 			$ser = serialize( $tmp );
-			// Write to cache
-			// @TODO
 
 			$cell_possible_values[ $cell_id ] = $tmp;
 
@@ -232,6 +213,10 @@ class Sift_data_model extends Sift_model {
 		return $matrix_field_data['cell'][ $matrix_field_id ];
 	}
 
+	public function clear_caches()
+	{
+		$this->empty_caches();
+	}
 
 } // End class
 

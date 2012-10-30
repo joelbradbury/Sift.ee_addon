@@ -4,7 +4,7 @@
  * Sift Core Model class
  *
  * @package         sift_ee_addon
- * @version         0.1
+ * @version         1.0
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/sift
  * @copyright       Copyright (c) 2012, Joel 
@@ -21,6 +21,7 @@ class Sift_core_model extends Sift_model {
 	private $specials = array(	'category', 
 								'category_group_',
 								'limit', 
+								'sort',
 								'loose_ends', 
 									'loose_ends_on', 
 									'loose_ends_off');
@@ -500,6 +501,13 @@ class Sift_core_model extends Sift_model {
 				if( count( $sort_order > 1 ) )
 				{
 					if( strtolower($sort_order[1]) == 'desc' ) $sort = 'desc';
+				}
+
+				// Allow the sort param to directly override this
+				if( isset( $this->sift_data['sort'] ) )
+				{
+					if( $this->sift_data['sort'] == 'asc' ) $sort = 'asc';
+					elseif( $this->sift_data['sort'] == 'desc' ) $sort = 'desc';
 				}
 
 

@@ -1,6 +1,16 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 
+/**
+ * Sift MCP Class
+ *
+ * @package         sift_ee_addon
+ * @version         1.0
+ * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
+ * @link            http://squarebit.co.uk/sift
+ * @copyright       Copyright (c) 2012, Joel 
+ */
+
 class Sift_mcp
 {
 	public $module_name;
@@ -19,12 +29,13 @@ class Sift_mcp
 		$this->contols[]  = $this->base.AMP.'method=settings';
 
 
-		$controls = array(  lang('sift')		=> $this->base . '&method=index',
+	/*	$controls = array(  lang('sift')		=> $this->base . '&method=index',
 							lang('sets')		=> $this->base . '&method=sets',
-							lang('settings')	=> $this->base . '&method=settings');
+							lang('settings')	=> $this->base . '&method=settings');*/
 
-		$this->EE->cp->set_right_nav( $controls );
+	//	$this->EE->cp->set_right_nav( $controls );
 
+		$this->_prep_message();
 
 		// Load helper
 		$this->EE->load->helper('Sift');
@@ -49,77 +60,44 @@ class Sift_mcp
 	{	
 		$this->EE->cp->set_variable('cp_page_title', lang('sift_module_name'));
 
-		return $this->EE->load->view('index', array(), TRUE);
+		$this->cached_vars['clear_cache_form_uri'] = $this->base . '&method=clear_caches';
+
+		return $this->EE->load->view('mcp_sift', $this->cached_vars, TRUE);
 	
 	}
 
-
-	// --------------------------------------------------------------------
-
-	/**
-	 * Module home page
-	 *
-	 * @access      public
-	 * @return      string
-	 */
-	function sets()
-	{		
-		$this->EE->cp->set_variable('cp_page_title', lang('sift_set_overview'));
-
-		// Get the current sift sets
-		$this->cached_vars['sets'] = $this->EE->sift_set_model->get_all();
-
-		// Give the option to create a new set
-		$this->cached_vars['new_set_uri'] = $this->base . '&method=new_set';
-
-
-		return $this->EE->load->view('mcp_sift_sets', $this->cached_vars, TRUE );
-	}
-
-	function settings()
+	function clear_caches()
 	{
-		// --------------------------------------
-		// Load some libraries
-		// --------------------------------------
+		$this->EE->sift_data_model->clear_caches();
 
-		$this->EE->load->library('javascript');
-
-		$this->EE->cp->set_variable('cp_page_title', lang('settings'));
-		$this->EE->cp->set_breadcrumb($this->base, lang('sift_module_name'));
-
-		$this->cached_vars['form_post_url'] = $this->base . '&method=save_settings';
-
-		return $this->EE->load->view('settings', $this->cached_vars, TRUE);
-	}
-
-
-
-
-
-	public function save_settings()
-	{
-		$data = array();
-
-		foreach( $this->EE->sift_example_model->attributes() as $attribute )
-		{
-			if( $this->EE->input->get_post( $attribute ) != '' )
-			{
-				$data[ $attribute ] = $this->EE->input->get_post( $attribute );
-			}
-		}
-
-		$this->EE->sift_example_model->insert( $data );
-
-        // ----------------------------------
+		   // ----------------------------------
         //  Redirect to Settings page with Message
         // ----------------------------------
         
-        $this->EE->functions->redirect($this->base . '&method=settings&msg=preferences_updated');
+        $this->EE->functions->redirect($this->base . '&method=index&msg=caches_cleared');
         exit;
 
 	}
 
-
+	/**
+	 * Prep message
+	 * @access	private
+	 * @param	message
+	 * @return	boolean
+	 */
+	
+	function _prep_message( $message = '' )
+	{
+        if ( $message == '' AND isset( $_GET['msg'] ) )
+        {
+        	$message = $this->EE->lang->line( $_GET['msg'] );
+        }
+		
+		$this->cached_vars['message']	= $message;
+		
+		return TRUE;
+	}
+	
 
 
 	

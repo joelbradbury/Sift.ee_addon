@@ -1,0 +1,70 @@
+<h2>Parameters</h2>
+
+<p><strong>Sift</strong> lets you pass almost all of it's paramters via Template parameters, in a GET query string, or via POST data.</p>
+
+<p>To give you as much flexibility in your setup, <a href="#overrides">some parameters can be overridden from passed <strong>post</strong> or <strong>get</strong> data</a>.</p>
+
+<h3>All The Parameters</h3>
+
+<dl>
+	<dt id="param_loose_ends"><code>loose_ends</code></dt>
+	<dd>Default value is '<strong>yes</strong>'. Pass a value of '<strong>no</strong>' to disable.<br/>By default all passed cell searches have 'loose ends'. In usage this means a search for 'app' will match text like 'apple' and 'snapple'. Disabling will mean only exact values will match.</dd>
+
+	<dt id="param_loose_ends_on"><code>loose_ends_on</code></dt>
+	<dd>No default value. Pass a pipe delimited list of cell names - ie <code><strong>loose_ends_one='cell_one|cell_two'</strong></code><br/>
+		This can be used to turn <strong>on</strong> loose ends cell by cell in your search. Great if want to pass 'loose_ends="no"' for most cells, but on for a specific field.</dd>
+
+	<dt id="param_loose_ends_off"><code>loose_ends_off</code></dt>
+	<dd>No default value. Again, pass a pipe delimited list of cell names, as for 'loose_ends_on' to turn <strong>off</strong> loose ends for specific cells.</dd>
+
+	<dt id="param_orderby"><code>orderby</code></dt>
+	<dd>Use to order your results by a the values of a <strong>matrix cell</strong>. <br/>
+		Pass the name of a cell, or a list of names pipe delimited to order by - ie. <code><strong>orderby='cell_one|cell_two'</strong></code></dd>
+
+	<dt id="param_sort"><code>sort</code></dt>
+	<dd>Use to change the sort order. Defaults to '<strong>asc</strong>'. Pass '<strong>desc</strong>' to change order.</dd>
+
+	<dt id="param_seperate_view"><code>seperate_view</code></dt>
+	<dd>Defaults to 'no'. Pass a value of 'yes' to enable the seperate view display. <a href="/sift/docs/display-options#content">Learn more about the display options</a></dd>
+
+	<dt id="param_category"><code>category</code></dt>
+	<dd>Limit your searches to specific categories. Pass the category id, or list of category ids pipe delimited. <a href="/sift/docs/category-searching">See more about category searching</a>.<dd>
+
+	<dt id="param_category_group_#"><code>category_group_#</code></dt>
+	<dd>Allows you to pass independant category ids for different category groups. Works in exactly the same way as the <a href="#param_category">category</a> param. <br/>
+		Simply pass like - <code><strong>category_group_1="12" category_group_4="42"</strong></code> etc.. <br/>
+		This lets you easily repopulate your search form later on.</dd>
+</dl>
+
+
+<h3>Parameter Parse Order</h3>
+<p>Parsing of parameters happens in the order:</p>
+<ol>
+	<li>TMPL Parameters - ie. <strong><code>&#123;exp:sift:view cell_one="blue"&#125;</code></strong></li>
+	<li>POST data - ie. passed parameters from a form with a method of '<strong>post</strong>'</li>
+	<li>GET data - ie. passed parameters from a form with a method of '<strong>get</strong>, or simply passed via query string - ie. <strong><code>/search?cell_one=red</code></strong></li>
+</ol>
+
+<p>The first time a parameter is encountered (apart from the <a href="#overrides">overrides</a>) it is kept and any other times it is passed it will be simply ignored. For example, if you have in your template:</p>
+
+<pre><code>&#123;exp:sift:view <em>cell_one="blue"</em> .. &#125; ..&#123;/exp:sift:view&#125;</code></pre>
+
+<p>And in your query string:</p>
+
+<pre><code>/search?<em>cell_one=red</em></code></pre>
+
+<p>The value of '<em>blue</em>' would be first encountered, and that would be searched on. The value of '<em>red</em>' would be simply ignored.</p>
+
+<h3 id="overrides">Parse Order Overrides</h3>
+<p>A few limited parameters can be overridden in the parse order. ie. You can specify a default in your TMPL params, but pass a different value from a search form, and that would be used instead.</p>
+<p>The parameters that can be overridden are : </p>
+
+<ul>
+	<li><code><a href="#param_category">category</a></code></li>
+	<li><code><a href="#param_category_group_#">category_group_#</a></code></li>
+	<li><code><a href="#param_loose_ends">loose_ends</a></code></li>
+	<li><code><a href="#param_loose_ends_on">loose_ends_on</a></code></li>
+	<li><code><a href="#param_loose_ends_off">loose_ends_off</a></code></li>
+	<li><code><a href="#param_limit">limit</a></code></li>
+	<li><code><a href="#param_sort">limit</a></code></li>
+</ul>

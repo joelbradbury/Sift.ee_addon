@@ -1,18 +1,18 @@
 <?php if ( ! defined('EXT')) exit('No direct script access allowed');
 
-
-// include config file
-include PATH_THIRD.'sift/config'.EXT;
-
 /**
  * Sift Module Class
  *
  * @package         sift_ee_addon
- * @version         0.1
+ * @version         1.0
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/sift
  * @copyright       Copyright (c) 2012, Joel 
  */
+
+// include config file
+include PATH_THIRD.'sift/config'.EXT;
+
 
 class Sift {
 	
@@ -101,8 +101,8 @@ class Sift {
 
 		$data = $this->EE->sift_core_model->handle_get_post();
 
-		$form_class = $this->EE->TMPL->fetch_param('class');
-		$form_id 	= $this->EE->TMPL->fetch_param('id');
+		$form_class = $this->EE->TMPL->fetch_param('form_class');
+		$form_id 	= $this->EE->TMPL->fetch_param('form_id');
 
 		$form_class = $form_class != '' ? ' class='.$form_class : '';
 		$form_id = $form_id == '' ? ' id='.$form_id : '';

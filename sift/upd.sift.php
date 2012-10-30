@@ -1,17 +1,18 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-// include config file
-include PATH_THIRD.'sift/config'.EXT;
-
 /**
  * Sift Update Class
  *
  * @package         sift_ee_addon
- * @version         0.1
+ * @version         1.0
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/sift
  * @copyright       Copyright (c) 2012, Joel 
  */
+
+// include config file
+include PATH_THIRD.'sift/config'.EXT;
+
 class Sift_upd {
 
 	// --------------------------------------------------------------------
@@ -67,7 +68,7 @@ class Sift_upd {
 		// Install tables
 		// --------------------------------------
 
-		//$this->EE->sift_set_model->install();
+		// None to install
 
 
 		// --------------------------------------
@@ -113,7 +114,7 @@ class Sift_upd {
 		// Uninstall tables
 		// --------------------------------------
 
-	//	$this->EE->sift_set_model->uninstall();
+		// None to remove
 
 		return TRUE;
 	}
@@ -136,8 +137,6 @@ class Sift_upd {
 			return FALSE;
 		}
 
-		// TODO flesh out upgrade if needed
-
 		// if (version_compare($current, 'new-version', '<'))
 		// {
 		// 	// update to new version
@@ -151,4 +150,4 @@ class Sift_upd {
 
 } // End class
 
-/* End of file upd.Sift.php */
+/* End of file upd.sift.php */

@@ -4,11 +4,12 @@
  * Sift Cookie Model class
  *
  * @package         sift_ee_addon
- * @version         0.1
+ * @version         1.0
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/sift
  * @copyright       Copyright (c) 2012, Joel 
  */
+
 class Sift_cookie_model extends Sift_model {
 
 	private $prefix = 'sift_';

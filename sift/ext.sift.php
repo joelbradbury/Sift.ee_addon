@@ -1,22 +1,21 @@
 <?php if ( ! defined('EXT')) exit('No direct script access allowed');
 
-
-// include config file
-include PATH_THIRD.'sift/config'.EXT;
-
 /**
  * Sift Extension Class
  *
  * @package         sift_ee_addon
- * @version         1.0.2
+ * @version         1.0
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/sift
  * @copyright       Copyright (c) 2012, Joel 
  */
 
+// include config file
+include PATH_THIRD.'sift/config'.EXT;
+
 class Sift_ext {
 
-		// --------------------------------------------------------------------
+	// --------------------------------------------------------------------
 	// PROPERTIES
 	// --------------------------------------------------------------------
 
@@ -45,8 +44,7 @@ class Sift_ext {
 	 */
 	private $hooks = array(
 		'channel_entries_query_result',
-		'matrix_data_query',
-		'channel_entries_tagdata'
+		'matrix_data_query'
 	);
 
 	// --------------------------------------------------------------------
@@ -249,18 +247,6 @@ class Sift_ext {
 		// Unset it now
 		unset( $this->EE->is_sift );
 		return $this->EE->db->query( $sql );
-	}
-
-
-	public function channel_entries_tagdata( $tagdata, $row, $that )
-	{
-	/*	dumper('hi tagdata', FALSE);
-		dumper( $tagdata, FALSE );
-		dumper('---', FALSE);
-		dumper( $row );
-*/
-
-		return $tagdata;
 	}
 
 }
