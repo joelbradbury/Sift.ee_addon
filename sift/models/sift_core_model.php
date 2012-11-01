@@ -26,6 +26,8 @@ class Sift_core_model extends Sift_model {
 									'loose_ends_on', 
 									'loose_ends_off');
 	private $force_single_matrix_rows = FALSE;
+	private $var_prefix 	= 'sift:';
+	private $var_prefixed 	= 'sifted:';
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -266,9 +268,17 @@ class Sift_core_model extends Sift_model {
 		{
 			$tmp[ $row['entry_id'] ] = 1;
 		}
-
 		$vars['total_unique_results'] = count( $tmp );
 
+
+		foreach( $this->sift_data as $key => $val )
+		{
+			$vars[ $this->var_prefix . $key ] = $val;
+			$vars[ $this->var_prefixed . $key ] = $val;
+		}
+
+		// Also add these as global vars
+		$this->EE->config->_global_vars( array_merge( $vars, $this->EE->config->_global_vars ) );
 		$this->tagdata = $this->EE->TMPL->parse_variables( $this->tagdata, array( $vars ), FALSE );
 
 		return;
@@ -688,6 +698,9 @@ class Sift_core_model extends Sift_model {
 			$current = array();
 			if( isset( $this->sift_data['category'] ) ) $current[] = $this->sift_data['category'];
 			$current = array_merge( $current, $cats );
+
+			// remove the empties
+			$current = array_filter($current);
 
 			$tmp = implode( '&', $current );
 			if( $tmp != '' ) $this->sift_data['category'] = $tmp;

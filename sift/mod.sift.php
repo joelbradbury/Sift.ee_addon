@@ -103,16 +103,18 @@ class Sift {
 
 		$form_class = $this->EE->TMPL->fetch_param('form_class');
 		$form_id 	= $this->EE->TMPL->fetch_param('form_id');
+		$form_method= $this->EE->TMPL->fetch_param('form_method');
 
-		$form_class = $form_class != '' ? ' class='.$form_class : '';
-		$form_id = $form_id == '' ? ' id='.$form_id : '';
+		$form_class = $form_class != '' ? ' class="'.$form_class : '"';
+		$form_id 	= $form_id != '' ? ' id="'.$form_id : '"';
+		$form_method= $form_method != '' ? 'get' : $form_method;
 
 		// Get the action_id 
 		$action_url = $this->EE->functions->fetch_site_index(). '/search';
 		if( $this->EE->TMPL->fetch_param('return') != '' ) $action_url = $this->EE->TMPL->fetch_param('return'); 
 
 		$hidden = '<input type="hidden" name="sift_search" value="yes"/>';
-		$bare = "<form name='sift_form'". $form_class . $form_id ." method='post' action='".$action_url."'>";
+		$bare = "<form name='sift_form'". $form_class . $form_id ." method='".$form_method."' action='".$action_url."'>";
 
 		$bare .= $hidden;
 		$bare .= $tagdata;
