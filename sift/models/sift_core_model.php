@@ -26,6 +26,8 @@ class Sift_core_model extends Sift_model {
 									'loose_ends_on', 
 									'loose_ends_off');
 	private $force_single_matrix_rows = FALSE;
+	private $var_prefix 	= 'sift:';
+	private $var_prefixed 	= 'sifted:';
 	private $passed = array();
 	private $offset = 0;
 
@@ -268,9 +270,17 @@ class Sift_core_model extends Sift_model {
 		{
 			$tmp[ $row['entry_id'] ] = 1;
 		}
-
 		$vars['total_unique_results'] = count( $tmp );
 
+
+		foreach( $this->sift_data as $key => $val )
+		{
+			$vars[ $this->var_prefix . $key ] = $val;
+			$vars[ $this->var_prefixed . $key ] = $val;
+		}
+
+		// Also add these as global vars
+		//$this->EE->config->_global_vars( array_merge( $vars, $this->EE->config->_global_vars ) );
 		$this->tagdata = $this->EE->TMPL->parse_variables( $this->tagdata, array( $vars ), FALSE );
 
 		return;
@@ -347,7 +357,7 @@ class Sift_core_model extends Sift_model {
 		// Magic!
 		// Now replace the orginal master with our new golden master
 		$tagdata = str_replace( $master, $golden, $tagdata );
-	
+
 		$this->EE->TMPL->tagdata = $tagdata;
 
 		return TRUE;
@@ -376,6 +386,7 @@ class Sift_core_model extends Sift_model {
 			$this->EE->TMPL->tagparams['paginate_base'] = $base;
 			$this->EE->uri->page_query_string = $base .'/P'.$this->offset;
 		}
+ 
 
 		$channel = new Channel;
 
@@ -390,13 +401,10 @@ class Sift_core_model extends Sift_model {
 			}
 		}
 
-
 		$this->EE->TMPL->tagparams['dynamic'] = FALSE;
 		$this->EE->TMPL->tagparams['entry_id'] = implode( '|', $entry_ids);
 		$this->EE->TMPL->tagparams['fixed_order'] = implode( '|', $entry_ids);
 		$this->EE->TMPL->tagparams['dynamic_parameters'] = FALSE;
-	//	$this->EE->TMPL->tagparams['offset'] = $this->offset;
-
 		unset( $this->EE->TMPL->tagparams['orderby'] );
 
 		// Add our markers to the channel object, so that the sift ext
@@ -704,8 +712,12 @@ class Sift_core_model extends Sift_model {
 		{
 			// We have some cats, re-assign 
 			$current = array();
+
 			if( isset( $this->sift_data['category'] ) AND $this->sift_data['category'] != '') $current[] = $this->sift_data['category'];
 			$current = array_merge( $current, $cats );
+
+			// remove the empties
+			$current = array_filter($current);
 
 			$tmp = implode( '&', $current );
 			if( $tmp != '' ) $this->sift_data['category'] = $tmp;
@@ -751,7 +763,7 @@ class Sift_core_model extends Sift_model {
 		// We can't just use the native ->input->post as it's already been cleared
 		$raw = $this->EE->security->xss_clean( $_POST );
 
-		// Pass over to the general cleanup and assign routine
+		// Pass over to the general cleanup and assign routine	
 		$posts = $this->_clean_and_assign_params( $raw, TRUE );
 		$this->passed = array_merge( $posts, $this->passed );
 	}
@@ -763,7 +775,7 @@ class Sift_core_model extends Sift_model {
 	* and assigns to sift_data array
 	*/
 	private function _check_get()
-	{		
+	{
 		// Nothing to do
 		if ( empty($_GET) === TRUE ) return;
 
@@ -782,13 +794,13 @@ class Sift_core_model extends Sift_model {
 	* used by the post and get param passing
 	*/
 	private function _clean_and_assign_params( $raw, $return = FALSE )
-	{
+	{	
 		$ret = array();
-
+ 
 		$i = 0;
 		// loop over them and do a quick cleanup
 		foreach( $raw as $key => $val )
-		{	
+		{
 			$i++;
 			// Don't allow overrides from post data (for now)
 			if( isset( $this->sift_data[ $key ] ) ) continue;
@@ -810,14 +822,14 @@ class Sift_core_model extends Sift_model {
 					$this->offset = $match[2];		
 				} 
 			}
-
+ 
 			if( trim( $val ) != '' ) 
 			{
 				$this->sift_data[ $key ] = $val;
 				if( $return ) $ret[ $key ] = $val;
 			}
-
-
+ 
+			$this->sift_data[ $key ] = $val;
 		}
 
 		// Also have a look for any special parameters
@@ -828,11 +840,7 @@ class Sift_core_model extends Sift_model {
 				// Don't allow overrides from post data (for now)
 				if( isset( $this->sift_data[ $key ] ) ) continue;
 
-				if( trim( $raw[ $key ] ) != '' ) 
-				{
-					$this->sift_data[ $key ] = $raw[ $key ];
-					if( $return ) $ret[ $key ] = $raw[ $key ];
-				}
+				$this->sift_data[ $key ] = $raw[ $key ];
 			}
 		}
 
@@ -848,7 +856,6 @@ class Sift_core_model extends Sift_model {
 
 		return FALSE;
 	}
-
 
 
 
