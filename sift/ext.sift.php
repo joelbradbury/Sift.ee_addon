@@ -44,7 +44,8 @@ class Sift_ext {
 	 */
 	private $hooks = array(
 		'channel_entries_query_result',
-		'matrix_data_query'
+		'matrix_data_query',
+		'channel_module_create_pagination'
 	);
 
 	// --------------------------------------------------------------------
@@ -239,8 +240,8 @@ class Sift_ext {
 			$extra_sql = ' AND row_id IN ('. implode(',', $extra).') ';
 
 			// Ok, rework the sql to just get the rows we know we need
-			$sql_new = str_replace( $marker, $extra_sql . $marker , $sql );			
-		
+			$sql_new = str_replace( $marker, $extra_sql . $marker , $sql );	
+			
 			return $this->EE->db->query( $sql_new );
 		}
 
@@ -248,5 +249,45 @@ class Sift_ext {
 		unset( $this->EE->is_sift );
 		return $this->EE->db->query( $sql );
 	}
+
+	public function channel_module_create_pagination( &$that, $count )
+	{
+		/*if( isset( $that->EE->is_sift ) ) 
+		{
+			$this->EE->extensions->end_script = TRUE;
+			return $this->_pagination( $that, $count );
+		}*/
+	}
+
+
+
+	private function _pagination( &$that, $count )
+	{
+		$ret = array();
+
+			$config['first_url'] 	= rtrim('BOYAH', '/');
+			$config['base_url']		= 'BOYSAH';
+			$config['prefix']		= 'P';
+			$config['total_rows'] 	= '12';
+			$config['per_page']		= '3';
+			// cur_page uses the offset because P45 (or similar) is a page
+			$config['cur_page']		= '2';
+			$config['first_link'] 	= lang('pag_first_link');
+			$config['last_link'] 	= lang('pag_last_link');
+			$config['uri_segment']	= 0; // Allows $config['cur_page'] to override
+
+			$this->EE->pagination->initialize($config);
+			$that->page_links = $this->EE->pagination->create_links();
+			$this->EE->pagination->initialize($config); // Re-initialize to reset config
+			$that->page_array = $this->EE->pagination->create_link_array();
+
+			$that->page_next = '1234';
+			$that->page_previous = '531';
+			
+		return $ret;
+
+			
+	}
+
 
 }

@@ -24,11 +24,14 @@
 				orderby="width_m:asc"
 				matrix_field="tyre_options"
 				loose_ends="no"
-			}
+				limit="5"
+				paginate="both"
+				paginate_base="/"}
+			
 
-				{if count==1}<h2>Sifted Entries <small>{total_results} result{if total_results>1}s{/if}, {total_rows} row{if total_rows>1}s{/if}, {total_unique_results} unqiue entries</small></h2>{/if}
+				{if count==1}<h2>Sifted Entries <small>{total_results} result{if total_results>1}s{/if}, {total_rows} row{if total_rows>1}s{/if}, {total_unique_results} unique entries</small></h2>{/if}
 				
-				<h4>({count}) : #{entry_id} {title}</h4>				
+				<h4>({absolute_count}) : #{entry_id} {title}</h4>				
 				
 				<table class="table table-bordered table-striped">
 	              <!--<thead>
@@ -46,7 +49,7 @@
 	              <tbody>
 	              	{tyre_options}
 	              	<tr>
-	              		<td>{row_id}</td>
+	              		<td>{row_id}, {absolute_count}, {count}, {row_count}</td>
 	              		<td>{width_m}</td>
 	              		<td>{profile}</td>
 	              		<td>{diameter}</td>
@@ -61,6 +64,9 @@
 	            </table>
 		        <hr/>
 
+		        {paginate}
+		        	{pagination_links}
+		        {/paginate}
 
 		        {if no_sift_results}
 		        	<div class="alert">

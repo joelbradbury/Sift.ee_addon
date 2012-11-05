@@ -17,7 +17,7 @@ class Sift_core_model extends Sift_model {
 	public 	$result_data;
 	private $tagdata;
 	private $matrix_field_name;
-	private $seperate_matrix_row_limit = 25;
+	private $seperate_matrix_row_limit = 99;
 	private $specials = array(	'category', 
 								'category_group_',
 								'limit', 
@@ -328,7 +328,7 @@ class Sift_core_model extends Sift_model {
 		foreach( $this->result_data as $key => $row )
 		{
 			$i = $key + 1;
-			$cond_tmp[] = 'count=='.$i.' AND row_id=='.$row['row_id'];
+			$cond_tmp[] = 'absolute_count=='.$i.' AND row_id=='.$row['row_id'];
 		}
 
 		// Build the conditional
@@ -347,7 +347,7 @@ class Sift_core_model extends Sift_model {
 		// Magic!
 		// Now replace the orginal master with our new golden master
 		$tagdata = str_replace( $master, $golden, $tagdata );
-
+	
 		$this->EE->TMPL->tagdata = $tagdata;
 
 		return TRUE;
@@ -848,6 +848,7 @@ class Sift_core_model extends Sift_model {
 
 		return FALSE;
 	}
+
 
 
 

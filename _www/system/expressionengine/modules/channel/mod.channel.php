@@ -1067,7 +1067,7 @@ class Channel {
 		{
 			$qstring = $this->query_string;
 		}
-		
+
 		$this->pagination->basepath = $this->EE->functions->create_url($this->uristr);
 
 		if ($qstring == '')
@@ -1139,7 +1139,6 @@ class Channel {
 				/** --------------------------------------
 				/**  Parse page number
 				/** --------------------------------------*/
-
 				if (($dynamic OR $this->EE->TMPL->fetch_param('paginate')) && preg_match("#^P(\d+)|/P(\d+)#", $qstring, $match)) 
 				{
 					$this->pagination->offset = (isset($match[2])) ? $match[2] : $match[1];
@@ -1573,7 +1572,6 @@ class Channel {
 		}
 
 		$sql .= "LEFT JOIN exp_members AS m ON m.member_id = t.author_id ";
-
 
 		if ($this->EE->TMPL->fetch_param('category') OR $this->EE->TMPL->fetch_param('category_group') OR $cat_id != '')
 		{
@@ -2599,7 +2597,7 @@ class Channel {
 				{
 					$total = $total - $offset;
 				}
-				
+
 				$this->pagination->cfields = $this->cfields;
 				
 				$this->pagination->build($total, $this->sql);

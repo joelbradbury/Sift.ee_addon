@@ -170,7 +170,7 @@ class Pagination_object {
 					$this->EE->config->slash_item('template_group').'/'.$this->EE->config->item('template')
 				);
 			}
-			
+
 			// If basepath is still nothing, create the url from the uri_string
 			if ($this->basepath == '')
 			{
@@ -185,7 +185,7 @@ class Pagination_object {
 					);
 				}
 			}
-			
+
 			// Standard pagination, not field_pagination
 			if ($this->field_pagination == FALSE)
 			{
