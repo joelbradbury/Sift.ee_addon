@@ -26,6 +26,8 @@ class Sift_core_model extends Sift_model {
 									'loose_ends_on', 
 									'loose_ends_off');
 	private $force_single_matrix_rows = FALSE;
+	private $passed = array();
+	private $offset = 0;
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -362,6 +364,19 @@ class Sift_core_model extends Sift_model {
 
 		$settings = array('seperate_rows' => $this->force_single_matrix_rows );
 
+
+		$base = array();
+		foreach( $this->passed as $key => $val )
+		{
+			if( !is_array( $val ) ) $base[] = $key .'='.$val;
+		}
+		if( !empty( $base ) ) 
+		{
+			$base = $this->EE->uri->uri_string . '?' . implode( '&', $base );
+			$this->EE->TMPL->tagparams['paginate_base'] = $base;
+			$this->EE->uri->page_query_string = $base .'/P'.$this->offset;
+		}
+
 		$channel = new Channel;
 
 		$this->EE->TMPL->tagparams['limit'] = '25';
@@ -375,10 +390,13 @@ class Sift_core_model extends Sift_model {
 			}
 		}
 
+
 		$this->EE->TMPL->tagparams['dynamic'] = FALSE;
 		$this->EE->TMPL->tagparams['entry_id'] = implode( '|', $entry_ids);
 		$this->EE->TMPL->tagparams['fixed_order'] = implode( '|', $entry_ids);
 		$this->EE->TMPL->tagparams['dynamic_parameters'] = FALSE;
+	//	$this->EE->TMPL->tagparams['offset'] = $this->offset;
+
 		unset( $this->EE->TMPL->tagparams['orderby'] );
 
 		// Add our markers to the channel object, so that the sift ext
@@ -686,7 +704,7 @@ class Sift_core_model extends Sift_model {
 		{
 			// We have some cats, re-assign 
 			$current = array();
-			if( isset( $this->sift_data['category'] ) ) $current[] = $this->sift_data['category'];
+			if( isset( $this->sift_data['category'] ) AND $this->sift_data['category'] != '') $current[] = $this->sift_data['category'];
 			$current = array_merge( $current, $cats );
 
 			$tmp = implode( '&', $current );
@@ -734,7 +752,8 @@ class Sift_core_model extends Sift_model {
 		$raw = $this->EE->security->xss_clean( $_POST );
 
 		// Pass over to the general cleanup and assign routine
-		$this->_clean_and_assign_params( $raw );
+		$posts = $this->_clean_and_assign_params( $raw, TRUE );
+		$this->passed = array_merge( $posts, $this->passed );
 	}
 
 	// --------------------------------------------------------------------
@@ -744,7 +763,7 @@ class Sift_core_model extends Sift_model {
 	* and assigns to sift_data array
 	*/
 	private function _check_get()
-	{
+	{		
 		// Nothing to do
 		if ( empty($_GET) === TRUE ) return;
 
@@ -752,7 +771,8 @@ class Sift_core_model extends Sift_model {
 		$raw = $this->EE->security->xss_clean( $_GET );
 
 		// Pass over to the general cleanup and assign routine
-		$this->_clean_and_assign_params( $raw );
+		$gets = $this->_clean_and_assign_params( $raw, TRUE );
+		$this->passed = array_merge( $gets, $this->passed );
 	}
 
 	// --------------------------------------------------------------------
@@ -761,15 +781,43 @@ class Sift_core_model extends Sift_model {
 	* Takes a raw array of keys and does basic cleanup,
 	* used by the post and get param passing
 	*/
-	private function _clean_and_assign_params( $raw )
+	private function _clean_and_assign_params( $raw, $return = FALSE )
 	{
+		$ret = array();
+
+		$i = 0;
 		// loop over them and do a quick cleanup
 		foreach( $raw as $key => $val )
-		{
+		{	
+			$i++;
 			// Don't allow overrides from post data (for now)
 			if( isset( $this->sift_data[ $key ] ) ) continue;
 
-			$this->sift_data[ $key ] = $val;
+			// The last passed variable gets special treatment
+			// This is to counter a pagination bug in the core EE pagination class
+			// rather than reworking it completely to use our own impliementation
+			// we'll just add a work around here, so all the native pagination 
+			// variables will still work. 
+			if( $i == count( $raw ) )
+			{
+				// Does this value look like it has a '/P#' appended to the end?
+				if ( preg_match("#^P(\d+)|/P(\d+)#", $val, $match) )
+				{
+					// It looks like this is a paginated clause,
+					// wipe it, but keep a marker for later when we need to pass over to the 
+					// parent channel, when we'll reinstate it.
+					$val = str_replace( $match[0], '', $val );	
+					$this->offset = $match[2];		
+				} 
+			}
+
+			if( trim( $val ) != '' ) 
+			{
+				$this->sift_data[ $key ] = $val;
+				if( $return ) $ret[ $key ] = $val;
+			}
+
+
 		}
 
 		// Also have a look for any special parameters
@@ -780,9 +828,15 @@ class Sift_core_model extends Sift_model {
 				// Don't allow overrides from post data (for now)
 				if( isset( $this->sift_data[ $key ] ) ) continue;
 
-				$this->sift_data[ $key ] = $raw[ $key ];
+				if( trim( $raw[ $key ] ) != '' ) 
+				{
+					$this->sift_data[ $key ] = $raw[ $key ];
+					if( $return ) $ret[ $key ] = $raw[ $key ];
+				}
 			}
 		}
+
+		if( $return ) return $ret;
 	}
 
 	/* 
