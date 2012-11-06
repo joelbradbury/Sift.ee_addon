@@ -30,6 +30,7 @@ class Sift_core_model extends Sift_model {
 	private $var_prefixed 	= 'sifted:';
 	private $passed = array();
 	private $offset = 0;
+	private $range_modifier = ':';
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -105,8 +106,19 @@ class Sift_core_model extends Sift_model {
 				$data['options'][ $cell_name ] = $this->EE->sift_data_model->get_cell_possible_values( $cell_id );
 			}		
 
+			// Also setup ALL the variants for both {range:..} and {between:..:..} vars
+			$blank[ 'range:'.$cell_name] = '';
+			$between_top = 'between:'.$cell_name.':';
+			foreach( $cells as $sub_cell_name => $sub_cell_id )
+			{
+				if( $sub_cell_name == $cell_name ) continue;
+				$blank[ $between_top . $sub_cell_name ] = '';
+			}
+
 		}
+
 		$data['blanks'] = $blank;
+
 
 		if( isset( $data['options'] ) AND is_array( $data['options'] ) )
 		{
@@ -483,7 +495,6 @@ class Sift_core_model extends Sift_model {
 					{	
 						if( trim( $cell ) != '' ) 
 						{
-
 							// Per cell, loose on/off also
 							if( $loose == '' )
 							{
@@ -513,6 +524,16 @@ class Sift_core_model extends Sift_model {
 
 						$cell_parts[] = ' col_id_'.$cell_id . $operator. '"'.$loose.$this->search_data['cells'][ $cell_id ].$loose.'" ';
 					}
+				}
+			}
+
+
+			// Handle ranges
+			foreach( $this->search_data['ranges'] as $cell_id => $val )
+			{
+				if( trim( $val ) != '' )
+				{
+					$cell_parts[] = ' col_id_'.$cell_id. ' '.$val . ' ' ;
 				}
 			}
 
@@ -632,6 +653,7 @@ class Sift_core_model extends Sift_model {
 
 		// Now we can cleanup and just get the search data for the cells that are possible
 		$passed_cells = array();
+		$range_cells = array();
 		foreach( $possible_cells as $cell_name => $cell_id )
 		{
 			// Is this cell assigned as an id?
@@ -643,23 +665,59 @@ class Sift_core_model extends Sift_model {
 			{
 				$passed_cells[ $cell_id ] = $this->sift_data[ $cell_name ];
 			}
+			
+			if( isset( $this->sift_data[ 'range:'.$cell_name ] ) )
+			{
+				if( strpos( $this->sift_data[ 'range:'.$cell_name ], $this->range_modifier ) > -1 )
+				{
+					$tmp = trim( $this->sift_data[ 'range:'.$cell_name ] );
+					if( strpos(  $tmp , $this->range_modifier ) == 0 )
+					{
+						// This is of the form ';val', ie. < val 
+						$tmp = str_replace( $this->range_modifier, ' <= ', $tmp );
+						$range_cells[ $cell_id ] = $tmp;
+					}
+					elseif( strpos( $tmp, $this->range_modifier ) == strlen( $tmp )-1 )
+					{
+						// This is of the form 'val;', ie. > val
+						$tmp = ' >= "' . str_replace( $this->range_modifier, '', $tmp ) .'" ';
+						$range_cells[ $cell_id ] = $tmp;
+					}
+					else
+					{
+						// this is of the form 'val1;val2', ie > val1 AND < val2
+						$vals = explode( $this->range_modifier, $tmp );
+						$range_cells[ $cell_id ] = ' >= "'. $vals[0] . '" AND col_id_'.$cell_id . ' <= "'.$vals[1].'" ';
+					}
+					
+				}
+				else
+				{
+					// It looks like this range cell just has a plain value in
+					// We'll allow this to handle the case where a range input 
+					// needs to return a single value
+					$range_cells[ $cell_id ] = ' = "'.$this->sift_data['range:'.$cell_name].'" ';
+				}
+			}
 		}
-
 
 		// Nothing to do
 		$has_val = FALSE;
-		foreach( $passed_cells as $cell_val )
+		if( !empty( $range_cells ) ) $has_val = TRUE;
+		else
 		{
-			if( trim( $cell_val ) != '' ) $has_val = TRUE;
+			foreach( $passed_cells as $cell_val )
+			{
+				if( trim( $cell_val ) != '' ) $has_val = TRUE;
+			}
 		}
 		if( $has_val === FALSE ) return FALSE;
-
-
 
 		$this->ids['matrix_field_id']				= $matrix_field_id;
 		$this->ids['cells']							= array_keys( $passed_cells );
 
 		$this->search_data['cells'] 				= $passed_cells;
+		$this->search_data['ranges'] 				= $range_cells;
 
 		return TRUE;
 	}
@@ -721,6 +779,58 @@ class Sift_core_model extends Sift_model {
 
 			$tmp = implode( '&', $current );
 			if( $tmp != '' ) $this->sift_data['category'] = $tmp;
+		}
+
+		/*
+		* We let users specify an interior search value for searching 
+		* across multiple fields. 
+		* The field name follow is as follows : 
+		* 	{between:lower_field:upper_field}
+		* where lower_field and upper_field are two cells with numeric values
+		*/
+
+		/*
+		* We allow range searching with a field name of the form :
+		*   {range:cell_name}
+		* within the field name we use the range_modifier (by default ';')
+		* to denote the upper and lower bounds
+		* valid values : 
+		* 	;10  == < 10
+		*  	5;20 == 5 < x < 20
+		* 	25;  == > 25 
+		* 
+		* 	this is the syntax we piggy back the between: searching on
+		*/
+
+		function between_split( $var )
+		{
+			if( strpos( $var, 'between:' ) > -1 ) return $var;
+		}
+
+		$betweens = array_filter( array_keys( $this->sift_data), 'between_split' );
+		$betweens = array_intersect_key( $this->sift_data, array_flip( $betweens ) );
+
+		if( !empty( $betweens ) ) 
+		{
+			// We have some between searches. 
+			// Validate the actual sub parts are valid cell names
+			// and then convert to masked range searches
+			foreach( $betweens as $key => $val )
+			{
+				if( $val == '' ) continue;
+				// Split it up
+				if( preg_match( '#between:(.*)#', $key, $matches) )
+				{
+					$cells = explode( ':', $matches[1] );
+
+					if( count( $cells ) == 2 )
+					{
+						$this->sift_data[ 'range:'.$cells[0] ] = $this->range_modifier . $val;
+						$this->sift_data[ 'range:'.$cells[1] ] = $val . $this->range_modifier;
+					}
+				}
+
+			}
 		}
 
 		return TRUE;
