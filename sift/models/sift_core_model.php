@@ -276,6 +276,8 @@ class Sift_core_model extends Sift_model {
 	private function _add_variables()
 	{
 		$vars['total_rows'] = count( $this->result_data );
+		$vars[ $this->var_prefix.'total_rows'] = count( $this->result_data );
+		$vars[ $this->var_prefixed.'total_rows'] = count( $this->result_data );
 
 		$tmp = array();
 		foreach( $this->result_data as $row )
@@ -283,6 +285,8 @@ class Sift_core_model extends Sift_model {
 			$tmp[ $row['entry_id'] ] = 1;
 		}
 		$vars['total_unique_results'] = count( $tmp );
+		$vars[ $this->var_prefix.'total_unique_results'] = count( $tmp );
+		$vars[ $this->var_prefixed.'total_unique_results'] = count( $tmp );
 
 
 		foreach( $this->sift_data as $key => $val )
@@ -292,7 +296,7 @@ class Sift_core_model extends Sift_model {
 		}
 
 		// Also add these as global vars
-		//$this->EE->config->_global_vars( array_merge( $vars, $this->EE->config->_global_vars ) );
+		$this->EE->config->_global_vars =  array_merge( $vars, $this->EE->config->_global_vars );
 		$this->tagdata = $this->EE->TMPL->parse_variables( $this->tagdata, array( $vars ), FALSE );
 
 		return;

@@ -32,6 +32,9 @@
 
 	<dt><code>form_id</code></dt>
 	<dd>Id to add to the form element</dd>
+
+	<dt><code>form_method</code></dt>
+	<dd>The method used to submit the form, defaults to <strong>GET</strong>, also takes a value of <strong>POST</strong></dd>
 </dl>
 
 
@@ -45,6 +48,13 @@
 
 	<dt><code>&#123;seperate_rows&#125;</code></dt>
 	<dd>Passed setting whether to seperate or merge result rows per enty. Defaults to 'no'</dd>
+
+
+	<dt><code>&#123;range:cell_name&#125;</code> (where '<em>cell_name</em>' is the name of the cell)</dt>
+	<dd>Returns the value of any previouly passed range search value for form repopulation</dd>
+
+	<dt><code>&#123;between:cell_name:other_cell_name&#125;</code> (where '<em>cell_name</em>' and '<em>other_cell_name</em>' are cell names)</dt>
+	<dd>Returns the value of any previouly passed between search values for form repopulation</dd>
 </dl>
 
 <p>In addition you can use the cell name in a tag pair. Usage like : </p>
@@ -97,10 +107,16 @@
 
 <dl>
 	<dt><code>&#123;total_rows&#125;</code></dt>
-	<dd>The total number of matrix rows returned. Similar to the standard &#123;total_results&#125; but counting rows instead of just entries</dd>
+	<dd>The total number of matrix rows returned. Similar to the standard &#123;total_results&#125; but counting rows instead of just entries. If the results are paginated, this is just the count of the rows on this page.</dd>
+
+	<dt><code>&#123;absolute_total_rows&#125;</code></dt>
+	<dd>The absolute number of matrix rows returned. Similar to the standard &#123;absolute_total_results&#125; but counting rows instead of just entries. Returns the absolute total across all paginated results.</dd>
 
 	<dt><code>&#123;total_unique_entries&#125;</code></dt>
-	<dd>The total number of unique entries returned. Useful when in <em>seperate_view</em> to get the count of different entries, not just the total row count.</dd>
+	<dd>The total number of unique entries returned. Useful when in <em>seperate_view</em> to get the count of different entries, not just the total row count. Returns count from just the current page if the result set has been paginated.</dd>
+
+	<dt><code>&#123;absolute_total_unique_entries&#125;</code></dt>
+	<dd>The absolute total number of unique entries returned. Useful when in <em>seperate_view</em> to get the count of different entries, not just the total row count. As before, returns count from all paginated results.</dd>
 </dl>
 
 <p>Use your normal markup to access your matrix field's rows. Sift will automatically rework the output to only output the matrix rows that match the searched terms. If the 'seperate_view="yes"' param was passed this tag pair will create a loop for each single row. </p>

@@ -34,7 +34,34 @@
 	<dd>Allows you to pass independant category ids for different category groups. Works in exactly the same way as the <a href="#param_category">category</a> param. <br/>
 		Simply pass like - <code><strong>category_group_1="12" category_group_4="42"</strong></code> etc.. <br/>
 		This lets you easily repopulate your search form later on.</dd>
+
+	<dt id="param_range"><code>range:cell_name</code> (where '<em>cell_name</em>' is the name of your cell)</dt>
+	<dd>Allows range based searching. The modifier '<strong><code>:</code></strong>' is used to denote the range marker. Specify your range syntax via the following syntax : 
+		<dl>
+			<dt><code>range:cell_name = '10'</code></dt>
+			<dd>equivalent to  <strong><code>cell_name == '10'</code></strong></dd>
+			
+			<dt><code>range:cell_name = ':10'</code></dt>
+			<dd>equivalent to  <strong><code>cell_name &lt;= '10'</code></strong></dd>
+
+			<dt><code>range:cell_name = '10:'</code></dt>
+			<dd>equivalent to  <strong><code>cell_name &gt;= '10'</code></strong></dd>
+
+			<dt><code>range:cell_name = '5:10'</code></dt>
+			<dd>equivalent to  <strong><code>cell_name &gt;= '5' AND cell_name &lt;= '10'</code></strong></dd>
+		</dl>
+	</dd>
+
+	<dt id="param_between"><code>between:cell_name:other_cell_name</code> (where '<em>cell_name</em>' and '<em>other_cell_name</em>' are names of your cells)</dt>
+	<dd>Allows range searching between two seperate fields in a single input. Great if you've got an <em>upper</em> and <em>lower</em> bound value held in two seperate fields. The order of the supplied cell names denotes which is the upper and which is the lower cells. For example : 
+		<dl>
+			<dt><code>between:cell_one:cell_two = '10'</code></dt>
+			<dd>becomes <strong><code>cell_one &gt;= '10' AND cell_two &lt;= '10'</code></strong></dd>
+		</dl>
+	</dd>
 </dl>
+
+<p class="note"><strong>Note:</strong> Both <strong>range</strong> and <strong>between</strong> searching work best when the cells your searching on contain <em>numeric</em> values</p>
 
 
 <h3>Parameter Parse Order</h3>
@@ -66,5 +93,5 @@
 	<li><code><a href="#param_loose_ends_on">loose_ends_on</a></code></li>
 	<li><code><a href="#param_loose_ends_off">loose_ends_off</a></code></li>
 	<li><code><a href="#param_limit">limit</a></code></li>
-	<li><code><a href="#param_sort">limit</a></code></li>
+	<li><code><a href="#param_sort">sort</a></code></li>
 </ul>
