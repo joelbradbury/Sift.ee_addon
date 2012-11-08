@@ -31,6 +31,7 @@ class Sift_core_model extends Sift_model {
 	private $passed = array();
 	private $offset = 0;
 	private $range_modifier = ':';
+	private $save_as_cookie = TRUE;
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -156,7 +157,7 @@ class Sift_core_model extends Sift_model {
 		$this->_check_tmpl();
 		$this->_check_post();
 		$this->_check_get();
-		$this->_check_cookie();
+		if( $this->save_as_cookie )	$this->_check_cookie();
 
 
 		// Clean it up for now
@@ -231,11 +232,14 @@ class Sift_core_model extends Sift_model {
 		if( empty( $passed ) ) return;
 
 		// Drop each of these into it's own cookie
-		foreach( $passed as $key => $val )
+		if( $this->save_as_cookie )
 		{
-			$data['name'] = $key;
-			$data['value'] = $val;
-			$this->EE->sift_cookie_model->set( $data );
+			foreach( $passed as $key => $val )
+			{
+				$data['name'] = $key;
+				$data['value'] = $val;
+				$this->EE->sift_cookie_model->set( $data );
+			}
 		}
 
 		// done
@@ -296,7 +300,7 @@ class Sift_core_model extends Sift_model {
 		}
 
 		// Also add these as global vars
-		$this->EE->config->_global_vars =  array_merge( $vars, $this->EE->config->_global_vars );
+		$this->EE->config->_sifted_vars = $vars;
 		$this->tagdata = $this->EE->TMPL->parse_variables( $this->tagdata, array( $vars ), FALSE );
 
 		return;
@@ -751,6 +755,24 @@ class Sift_core_model extends Sift_model {
 			if( $this->check_yes( $this->sift_data['seperate_view'] ) )
 			{
 				$this->force_single_matrix_rows = TRUE;
+			}
+			if( $this->check_no( $this->sift_data['seperate_view'] ) )
+			{
+				$this->force_single_matrix_rows = FALSE;
+			}
+			
+		}
+
+		// Overrides the cookie param saving
+		if( isset( $this->sift_data['save_as_cookie'] ) )
+		{
+			if( $this->check_yes( $this->sift_data['save_as_cookie'] ) )
+			{
+				$this->save_as_cookie = TRUE;
+			}
+			elseif( $this->check_no( $this->sift_data['save_as_cookie'] ) )
+			{
+				$this->save_as_cookie = FALSE;
 			}
 		}
 

@@ -45,7 +45,7 @@ class Sift_ext {
 	private $hooks = array(
 		'channel_entries_query_result',
 		'matrix_data_query',
-		'channel_module_create_pagination'
+		'template_post_parse'
 	);
 
 	// --------------------------------------------------------------------
@@ -164,6 +164,19 @@ class Sift_ext {
 		$this->EE->db->delete('extensions');
 	}
 
+	public function template_post_parse( &$final, $sub, $site_id )
+	{
+		if( isset( $this->EE->config->_sifted_vars ) AND !empty( $this->EE->config->_sifted_vars ) )
+		{
+			foreach( $this->EE->config->_sifted_vars as $key => $val )
+			{
+				// Blind replace
+				$final = str_replace(LD.$key.RD, $val, $final );
+			}
+		}
+		return $final;
+	}
+
 	public function channel_entries_query_result( &$that, $query_result )
 	{
 		if( isset( $that->is_sift ) AND $that->is_sift === TRUE )
@@ -248,45 +261,6 @@ class Sift_ext {
 		// Unset it now
 		unset( $this->EE->is_sift );
 		return $this->EE->db->query( $sql );
-	}
-
-	public function channel_module_create_pagination( &$that, $count )
-	{
-		/*if( isset( $that->EE->is_sift ) ) 
-		{
-			$this->EE->extensions->end_script = TRUE;
-			return $this->_pagination( $that, $count );
-		}*/
-	}
-
-
-
-	private function _pagination( &$that, $count )
-	{
-		$ret = array();
-
-			$config['first_url'] 	= rtrim('BOYAH', '/');
-			$config['base_url']		= 'BOYSAH';
-			$config['prefix']		= 'P';
-			$config['total_rows'] 	= '12';
-			$config['per_page']		= '3';
-			// cur_page uses the offset because P45 (or similar) is a page
-			$config['cur_page']		= '2';
-			$config['first_link'] 	= lang('pag_first_link');
-			$config['last_link'] 	= lang('pag_last_link');
-			$config['uri_segment']	= 0; // Allows $config['cur_page'] to override
-
-			$this->EE->pagination->initialize($config);
-			$that->page_links = $this->EE->pagination->create_links();
-			$this->EE->pagination->initialize($config); // Re-initialize to reset config
-			$that->page_array = $this->EE->pagination->create_link_array();
-
-			$that->page_next = '1234';
-			$that->page_previous = '531';
-			
-		return $ret;
-
-			
 	}
 
 

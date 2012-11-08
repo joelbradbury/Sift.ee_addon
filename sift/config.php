@@ -14,7 +14,7 @@ if ( ! defined('SIFT_NAME'))
 {
 	define('SIFT_NAME',         'Sift');
 	define('SIFT_CLASS_NAME',   'Sift');
-	define('SIFT_VERSION',      '0.7');
+	define('SIFT_VERSION',      '0.7.1');
 	define('SIFT_DOCS',         'http://squarebit.co.uk/sift');
 	define('SIFT_DEBUG',        FALSE);
 }

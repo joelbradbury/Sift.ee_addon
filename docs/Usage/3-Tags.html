@@ -105,7 +105,13 @@
 <h4>Tag Variables</h4>
 <p>The <strong>:view</strong> tag has all the standard entry, field and loop variables as the channel:entries tag. All your normal field variables will work here as normal. In addition to those the following extra variables are available:</p>
 
+<p class="note"><strong>Note:</strong> The tag variables listed below are also available outside the <strong>:view</strong> tag pair, and get added as global variables on sift pages. How handy!</p>
+
 <dl>
+	<dt><code>&#123;sifted:var_name&#125;</code> where '<em>var_name</em>' is the name off a passed variable</dt>
+	<dd>The value of any passed search inputs. So if you have a search form with an input called '<strong>cell_one</strong>' then <strong>&#123;sifted:cell_one&#125;</strong> would be the value the user just entered that sift is searching on.</dd>
+
+
 	<dt><code>&#123;total_rows&#125;</code></dt>
 	<dd>The total number of matrix rows returned. Similar to the standard &#123;total_results&#125; but counting rows instead of just entries. If the results are paginated, this is just the count of the rows on this page.</dd>
 
