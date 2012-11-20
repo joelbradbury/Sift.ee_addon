@@ -398,7 +398,7 @@ class Sift_core_model extends Sift_model {
 		$base = array();
 		foreach( $this->passed as $key => $val )
 		{
-			if( !is_array( $val ) ) $base[] = $key .'='.$val;
+			if( !is_array( $val ) ) $base[] = htmlentities($key) .'='.htmlentities($val);
 		}
 		if( !empty( $base ) ) 
 		{
