@@ -32,6 +32,8 @@ class Sift_core_model extends Sift_model {
 	private $offset = 0;
 	private $range_modifier = ':';
 	private $save_as_cookie = TRUE;
+	private $sift_data_ignored = array();
+	private $adjust_modifier = '__';
 
 	// --------------------------------------------------------------------
 	// METHODS
@@ -107,8 +109,9 @@ class Sift_core_model extends Sift_model {
 				$data['options'][ $cell_name ] = $this->EE->sift_data_model->get_cell_possible_values( $cell_id );
 			}		
 
-			// Also setup ALL the variants for both {range:..} and {between:..:..} vars
+			// Also setup ALL the variants for {range:..} {bound:..} and {between:..:..} vars
 			$blank[ 'range:'.$cell_name] = '';
+			$blank[ 'bound:'.$cell_name] = '';
 			$between_top = 'between:'.$cell_name.':';
 			foreach( $cells as $sub_cell_name => $sub_cell_id )
 			{
@@ -400,6 +403,9 @@ class Sift_core_model extends Sift_model {
 		{
 			if( !is_array( $val ) ) $base[] = htmlentities($key) .'='.htmlentities($val);
 		}
+
+		// Cleanup
+		$base = str_replace( '+', '%2B', $base );
 		if( !empty( $base ) ) 
 		{
 			$base = $this->EE->uri->uri_string . '?' . implode( '&', $base );
@@ -664,6 +670,15 @@ class Sift_core_model extends Sift_model {
 		$range_cells = array();
 		foreach( $possible_cells as $cell_name => $cell_id )
 		{
+			if( isset( $this->sift_data_ignored[ $cell_name ] ) ) 
+			{
+				$cell_name = $this->adjust_modifier . $cell_name;
+			}
+			elseif( isset( $this->sift_data_ignored[ 'range:'.$cell_name ] ) ) 
+			{
+				$cell_name = $this->adjust_modifier . $cell_name;
+			}
+
 			// Is this cell assigned as an id?
 			if( isset( $this->sift_data[ 'col_id_'.$cell_id ] ) )
 			{
@@ -673,7 +688,6 @@ class Sift_core_model extends Sift_model {
 			{
 				$passed_cells[ $cell_id ] = $this->sift_data[ $cell_name ];
 			}
-			
 			if( isset( $this->sift_data[ 'range:'.$cell_name ] ) )
 			{
 				if( strpos( $this->sift_data[ 'range:'.$cell_name ], $this->range_modifier ) > -1 )
@@ -708,6 +722,8 @@ class Sift_core_model extends Sift_model {
 				}
 			}
 		}
+
+	//	die('<pre>'.print_R($this->sift_data,1).', '.print_R($range_cells,1));
 
 		// Nothing to do
 		$has_val = FALSE;
@@ -858,6 +874,165 @@ class Sift_core_model extends Sift_model {
 
 			}
 		}
+
+
+		/* 
+		* We also allow users to supply a bound value
+		* to adjust a numeric range search with +/- limits
+		* So : A search for width = 5, with bound:width = 2, 
+		* really search for 3 < width < 7 
+		*
+		* This works with any value, and will adjust the search value 
+		* silently. If it's a straight up search that'll kick it 
+		* into a between search. If it's a range it'll simply
+		* adjust the searched value up or down as appropriate
+		*
+		* The cases are as follows : 
+		* 	width = 5, bound:width = 2
+		* 		==>   (5-2) < width < (5+2)	
+		*
+		*   range:width = :5, bound = 2
+		* 		==>   width <= 5, bound:width = 2,
+		* 		==>	  width <= (5-2)
+		*
+		*   range:width = 5:, bound = 2
+		* 		==>   width => 5, bound:width = 2,
+		* 		==>	  width => (5+2)
+		*
+		*   range:width = 5:10, bound = 2
+		* 		==>   5 <= width <= 10, bound:width = 2,
+		* 		==>	  (5-2) <= width <= (10+2)
+		* 
+		* 
+		*   between:width:height = 5, bound:width:height = 2
+		* 		==>   width >= 5 AND height <=5, bound 2
+		* 		==>	  width >= (5+2) AND height <= (5-2)	
+		* 
+		*  Make sense?
+		*  If any passed bound fields don't match with a 
+		*  value passed field or either values are non-numeric
+		*  they are simply ignored
+		*/ 
+
+		function bound_split( $var )
+		{
+			if( strpos( $var, 'bound:' ) > -1 ) return $var;
+		}
+
+		$bounds = array_filter( array_keys( $this->sift_data), 'bound_split' );
+		$bounds = array_intersect_key( $this->sift_data, array_flip( $bounds ) );
+
+		if( !empty( $bounds ) )
+		{
+			// We have some bounds to deal with
+
+			// We'll add these as new params to the sift_data search array,
+			// but also mark the parent items to be ignored later when
+			// we build the search strings. 
+			// That way we can still retain repopulation data
+			// without needing to do backflips later on
+
+			foreach( $bounds as $key => $val )
+			{
+				if( $val == '' OR !is_numeric( $val ) ) continue;
+
+
+				// Split it up
+				if( preg_match( '#bound:(.*)#', $key, $matches) )
+				{
+					// Ok we have our marker, do we have a matching field name elsewhere?
+					$cell = $matches[1];
+
+					if( isset( $this->sift_data[ $cell ] ) AND $this->sift_data[ $cell ] != '' AND is_numeric( $this->sift_data[ $cell ] ) )
+					{
+						// Good, now adjust
+						$value = $this->sift_data[ $cell ];
+						$new_name = $this->adjust_modifier . $cell;
+						$this->sift_data['range:'.$new_name] = ( $value - $val ) . $this->range_modifier . ( $value + $val );
+
+						// add the base one to the ignore list
+						$this->sift_data_ignored[ $cell ] = $value;
+					}
+					elseif( isset( $this->sift_data[ 'range:'. $cell ] ) AND $this->sift_data[ 'range:'.$cell ] != '' )
+					{
+						// Good, adjust
+						$value = trim( $this->sift_data[ 'range:'.$cell ] );
+
+						if( strpos( $value, $this->range_modifier ) > -1 )
+						{
+							
+							if( strpos(  $value , $this->range_modifier ) == 0 )
+							{
+								// This is of the form ';val', ie. < val 
+								$new_name = $this->adjust_modifier . $cell;
+								$tmp = str_replace( $this->range_modifier, '', $value );
+
+								if( !is_numeric( $tmp ) ) continue;
+								$new_val = $tmp - $val;
+
+								$this->sift_data[ 'range:'. $new_name ] = $this->range_modifier . $new_val;
+								$this->sift_data_ignored[ 'range:'.$cell ] = $value;
+
+							}
+							elseif( strpos( $value, $this->range_modifier ) == strlen( $value )-1 )
+							{
+								// This is of the form 'val;', ie. > val
+								$new_name = $this->adjust_modifier . $cell;
+								$tmp = str_replace( $this->range_modifier, '', $value );
+
+								if( !is_numeric( $tmp ) ) continue;
+								$new_val = $tmp + $val;
+
+								$this->sift_data[ 'range:'. $new_name ] = $new_val.$this->range_modifier;
+								$this->sift_data_ignored[ 'range:'.$cell ] = $value;
+
+							}
+							else
+							{
+								// this is of the form 'val1;val2', ie > val1 AND < val2
+
+								$values = explode( $this->range_modifier, $value );
+								$new_name = $this->adjust_modifier . $cell;
+
+								if( count( $values ) != 2 ) continue;
+
+								$lower = $values[0];
+								$upper = $values[1];
+
+								if( !is_numeric( $lower ) OR !is_numeric( $upper ) ) continue;
+
+								$new_lower = $lower - $val;
+								$new_upper = $upper + $val;
+
+								$this->sift_data[ 'range:'.$new_name ] = $new_lower . $this->range_modifier . $new_upper;
+								$this->sift_data_ignored[ 'range:'.$cell ] = $value;
+
+							}
+							
+						}
+						else
+						{
+							// It looks like this range cell just has a plain value in
+							// We'll allow this to handle the case where a range input 
+							// and just treat it like a straight up input
+							//$range_cells[ $cell_id ] = ' = "'.$this->sift_data['range:'.$cell_name].'" ';
+
+							$value = $this->sift_data[ $cell ];
+							$new_name = $this->adjust_modifier . $cell;
+							$this->sift_data['range:'.$new_name] = ( $value - $val ) . $this->range_modifier . ( $value + $val );
+
+							// add the base one to the ignore list
+							$this->sift_data_ignored[ 'range:'. $cell ] = $value;
+
+						}
+
+					}
+				}
+
+			}
+
+		}
+
 
 		return TRUE;
 	}

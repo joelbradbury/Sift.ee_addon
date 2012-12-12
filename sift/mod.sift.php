@@ -105,8 +105,8 @@ class Sift {
 		$form_id 	= $this->EE->TMPL->fetch_param('form_id');
 		$form_method= $this->EE->TMPL->fetch_param('form_method');
 
-		$form_class = $form_class != '' ? ' class="'.$form_class : '"';
-		$form_id 	= $form_id != '' ? ' id="'.$form_id : '"';
+		$form_class = $form_class != '' ? ' class="'.$form_class.'"' : '';
+		$form_id 	= $form_id != '' ? ' id="'.$form_id.'"' : '';
 		$form_method= $form_method != '' ? 'get' : $form_method;
 
 		// Get the action_id 
