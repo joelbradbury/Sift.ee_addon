@@ -1,0 +1,118 @@
+<h2>Range Searching</h2>
+
+<p>With sift you're not limited to just direct value searching. If you're storing numeric values it might make sense to search by ranges. To do this, <strong>Sift</strong> has three special features to help you along.</p>
+
+
+<ol>
+	<li><a href="#range-searching">Direct Range Searching</a></li>
+	<li><a href="#between-searching">Range Searching between two seperate cells</a></li>
+	<li>Bounded Searches</li>
+</ol>
+
+<p>All of the features described below can be set directly on the <strong>sift:results</strong> tag as params, or passed via form submissions simply by naming your inputs to the same name.</p>
+
+<h3 id="range-searching">Direct Range Searching</h3>
+
+<p>Direct range searching is the simplest of options. Effectively all you need to do is supply the cell name and value to use as a range. Simply prefix the cell_name, with '<strong>range:</strong>' to denote a range search, then apply the range modifier '<strong>:</strong>' to denote the form of the range.</p>
+
+<p class="note"><strong>Note:</strong> We use the character '<strong>:</strong>' to denote the direction of the range. If there's not '<strong>:</strong>' character in the value, it's treated like a normal search.</p>
+
+<p>The options for denoting the range are : </p>
+<ul>
+	<li><code>range:cell_name = '<strong>:</strong>10'</code> <br/>&nbsp;&nbsp; &#8594; <code>cell_name <strong>&lt;=</strong> 10</code></li>
+	<li><code>range:cell_name = '10<strong>:</strong>'</code> <br/>&nbsp;&nbsp; &#8594; <code>cell_name <strong>=&gt;</strong> 10</code></li>
+	<li><code>range:cell_name = '5<strong>:</strong>20'</code> <br/>&nbsp;&nbsp; &#8594; <code>5 <strong>=&gt;</strong> cell_name <strong>=&gt;</strong> 20</code></li>
+</ul>
+
+<p>Using as params would be like :</p>
+
+<pre><code>&#123;exp:sift:results 
+	<em>range:cell_name=":10"</em>&#125;
+	..
+&#123;/exp:sift:results&#125;</code></pre>
+<p>or directly in a the form :</p>
+
+<pre><code>..
+<em>&lt;input name="range:cell_name" value=":10"&gt;</em>
+..</code></pre>
+
+<p>which would give the same effective results.</p>
+
+
+<h3 id="between_searching">Range Searching Between 2 Seperate Cells</h3>
+<p>Sometimes there might be an upper and lower bound value for a row stored in two seperate cells. For example we might be storing information about car wheels, and have a <em>max_size</em> and <em>min_size</em> values.</p>
+
+<p>In those cases where we'd like to have a user supply a value that lies within those values in a single input, you can use <strong>between:</strong> range searching.</p>
+
+<p class="note"><strong>Note:</strong> Between searching is really just a special case for supplying two range searches in a single input or parameter.</p>
+
+<p>For example, we have if we have a <em>min_size</em> and <em>max_size</em> cells we'd contruct the between search like :</p>
+<pre><code>&#123;exp:sift:results
+	<em>between:min_size:max_size="10"</em>&#125;
+	..
+&#123;/exp:sift:results&#125;</code></pre>
+
+<p>The order of the two cell names denotes which is to be treated as the upper and lower range points. The above example would produce a query like :</p>
+
+<pre><code><em>min_size =&gt; 10 AND max_size &lt;= 10</em></code></pre>
+
+<p>This can be of great usage when the input is user controlled in a form input.</p>
+
+<h3 id="bound_searching">Bounded Searches</h3>
+<p>Standard searching is all well and good, but what about when you'd like a user to be able to enter a value, then actually search and return rows that contain values <em>around</em> that value. For example they're looking for a product entry that's about <em>200 cm's</em> tall. We'd actually like to do a search for entries between <em>180</em> and <em>220</em> cms. For that, we can use <strong>bound:</strong>.</p>
+
+<p>Naming for bounds is simply of the form <strong>bound:cell_name</strong>, where <em>cell_name</em> is the name of another cell. For bounds to work you'll also need a supplied search value for that cell_name, otherwise the bound will have no effect. For example :</p>
+
+<pre><code>&#123;exp:sift:results
+	<em>cell_name="10"</em>
+	<em>bound:cell_name="2"</em>&#125;
+	..
+&#123;exp:sift:results&#125;</code></pre>
+
+<p>Would adjust that search for <em>cell_name == '10'</em> into a range search like :</p>
+<pre><code><em>(10 - 2) => cell_name => (10 + 2)</em></code></pre>
+
+<h4>But Wait! There's More!</h4>
+<p>Bounds don't just work on straight searches. They can also be used to ajust the search values for <strong>range</strong> and <strong>between</strong> searches.</p>
+
+<p>The same naming convention holds when adjusting a range or between search, so for example :</p>
+
+<pre><code>&#123;exp:sift:results
+	<em>range:cell_name=":10"</em>
+	<em>bound:cell_name="2"</em>&#125;
+	..
+&123;/exp:sift:results&#125;</code></pre>
+
+<p>Turns what would have been a range search like '<em>cell_name &lt;= 10</em>' into:</p>
+<pre><code><em>cell_name &lt;= (10 - 2)</em></code></pre>
+
+<p>When adjusting a range search the direction of the range is taken into account for the bound adjustment. The bound follows the direction of the range, so a less-than search will have it's value decremented further, while a greater-than search will have the upper limit increased. The logic follows the following flow :</p>
+
+<ul>
+	<li><code>range:cell_name = ':10', bound:cell_name = '2'</code>  <br/>&nbsp;&nbsp; &#8594; 
+		<code>range:cell_name = ':(10 <strong>-</strong> 2)'</code> <br/>&nbsp;&nbsp;&nbsp;&nbsp; &#8594; 
+		<code>cell_name &lt;= (10 <strong>-</strong> 2)</code></li>
+</ul>
+
+<ul>
+	<li><code>range:cell_name = '10:', bound:cell_name = '2'</code>  <br/>&nbsp;&nbsp; &#8594; 
+		<code>range:cell_name = '(10 <strong>+</strong> 2):'</code> <br/>&nbsp;&nbsp;&nbsp;&nbsp; &#8594; 
+		<code>cell_name =&gt; (10 <strong>+</strong> 2)</code></li>
+</ul>
+
+
+<ul>
+	<li><code>range:cell_name = '5:20', bound:cell_name = '2'</code>  <br/>&nbsp;&nbsp; &#8594; 
+		<code>range:cell_name = '( (5 <strong>-</strong> 2) : ( 20 <strong>+</strong> 2 ) )'</code> <br/>&nbsp;&nbsp;&nbsp;&nbsp; &#8594; 
+		<code>cell_name =&gt; (5 <strong>-</strong> 2) AND cell_name &lt;= (20 <strong>+</strong> 2)</code></li>
+</ul>
+
+
+<p class="note"><strong>Note:</strong> Bounds need to have numeric values to work. If a non-numeric value is passed in either value the bound adjustment is escaped and the search proceeds as normally as if no bound value was passed.</p>
+
+
+
+
+
+
+
