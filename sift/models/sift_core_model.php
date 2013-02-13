@@ -96,6 +96,8 @@ class Sift_core_model extends Sift_model {
 
 		// Setup a blank data array for blank population
 		$blank = array();
+
+		$blank['keywords'] = '';
 		foreach( $cells as $cell_name => $cell_id )
 		{
 			$blank[ $cell_name ] = '';
@@ -473,6 +475,7 @@ class Sift_core_model extends Sift_model {
 			$operator 		= ' LIKE ';
 			$grouper  		= ' AND ';
 			$subgrouper  	= ' AND ';
+			$keyword_grouper = ' OR ';
 
 			// Allow the loose ends to be overridden
 			$loose 			= '%';
@@ -497,6 +500,18 @@ class Sift_core_model extends Sift_model {
 			if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
 			$sql = 'SELECT * FROM exp_matrix_data WHERE field_id = '.$this->ids['matrix_field_id'] . ' AND ';
 
+			// Search all the searchable cells
+			if( $this->search_data['keywords'] != '' )
+			{
+				$tmp = array();
+				foreach( $this->ids['cell_ids'] as $cell_id => $cell_name )
+				{
+					$tmp[] = ' col_id_'.$cell_id.' ' .$operator.' "'.$this->search_data['keywords'].'" ';
+				}
+
+				$sql .= '( '. implode( $keyword_grouper, $tmp ) .' ) ';
+				
+			}
 
 			$cell_parts = array();
 			foreach( $this->ids['cells'] as $cell_id )
@@ -551,7 +566,7 @@ class Sift_core_model extends Sift_model {
 				}
 			}
 
-			$sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';
+			if( !empty( $cell_parts ) ) $sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';
 
 			// Add orderby and sort params
 			if( isset( $this->sift_data['orderby'] ) AND $this->sift_data['orderby'] != '' )
@@ -602,6 +617,7 @@ class Sift_core_model extends Sift_model {
 			// and do something useful with them
 			// also cache perhaps
 
+
 			$this->result_data = $res;
 
 			// Write to the cache
@@ -628,6 +644,7 @@ class Sift_core_model extends Sift_model {
 		// Any extra filters like channel(s) entry_id(s) status(es) will 
 		// be applied via the channel->entries class before we cleanup later
 		$matrix_field_id = FALSE;
+
 
 		if( $this->_isset_and_is_int( 'matrix_field_id', $this->sift_data ))
 		{
@@ -723,7 +740,6 @@ class Sift_core_model extends Sift_model {
 			}
 		}
 
-	//	die('<pre>'.print_R($this->sift_data,1).', '.print_R($range_cells,1));
 
 		// Nothing to do
 		$has_val = FALSE;
@@ -735,6 +751,16 @@ class Sift_core_model extends Sift_model {
 				if( trim( $cell_val ) != '' ) $has_val = TRUE;
 			}
 		}
+
+		$this->search_data['keywords'] 				= '';
+
+		// Is there a 'keywords' search?
+		if( isset( $this->sift_data['keywords'] ) AND $this->sift_data['keywords'] != '')
+		{
+			$has_val = TRUE;
+			$this->search_data['keywords'] 				= $this->sift_data['keywords'];
+		}
+
 		if( $has_val === FALSE ) return FALSE;
 
 		$this->ids['matrix_field_id']				= $matrix_field_id;
