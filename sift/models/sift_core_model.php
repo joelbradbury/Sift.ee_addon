@@ -506,7 +506,7 @@ class Sift_core_model extends Sift_model {
 				$tmp = array();
 				foreach( $this->ids['cell_ids'] as $cell_id => $cell_name )
 				{
-					$tmp[] = ' col_id_'.$cell_id.' ' .$operator.' "'.$this->search_data['keywords'].'" ';
+					$tmp[] = ' col_id_'.$cell_id.' ' .$operator.' "'.$loose.$this->search_data['keywords'].$loose.'" ';
 				}
 
 				$sql .= '( '. implode( $keyword_grouper, $tmp ) .' ) ';
