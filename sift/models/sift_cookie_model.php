@@ -4,10 +4,10 @@
  * Sift Cookie Model class
  *
  * @package         sift_ee_addon
- * @version         1.0
+ * @version         1.1
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/sift
- * @copyright       Copyright (c) 2012, Joel 
+ * @copyright       Copyright (c) 2013, Joel Bradbury
  */
 
 class Sift_cookie_model extends Sift_model {
