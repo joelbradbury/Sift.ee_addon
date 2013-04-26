@@ -205,13 +205,11 @@ class Sift_core_model extends Sift_model {
 		$status = $this->_validate_sift_data();
 		if( $status == FALSE ) 
 		{
-
 			/* Something failed the validation, we're not going 
 			* 	to even try to do any searching, return False 
 			*/
 			return FALSE;
 		}
-
 		// Log these search terms as cookies for the user
 		$this->_save_params();
 
@@ -228,6 +226,49 @@ class Sift_core_model extends Sift_model {
 
 		return $this->tagdata;
 	}
+
+
+	// --------------------------------------------------------------
+
+	public function handle_low_search($params)
+	{
+		/* For searches coming via low_search, the search
+		 	data has already been parsed and cleaned, we just
+		 	need to grab out the parts that are interesting to us */
+
+		// Clear it out just in case		
+		$this->sift_data = array();
+		$this->_check_low_search($params);
+
+		// Ok, the sift_data array should be nice and neat for us now
+		// Lets have a quick shifty to see if there's anything to do
+		$status = $this->_validate_sift_data();
+		if( $status == FALSE ) 
+		{
+			/* Something failed the validation, we're not going 
+			* 	to even try to do any searching, return False 
+			*/
+			return FALSE;
+		}
+
+		// Ok, it seems good, now try and do some real search 
+		$status = $this->_perform_sift();
+		if( $status == FALSE ) return FALSE;
+
+		// The result data should be in $result_data, do a quick sanity check 
+		if( empty( $this->result_data ) ) return FALSE;
+
+		// We don't need to parse this, just wrap some things up and pass it back to low search
+		$ret = array();
+		foreach( $this->result_data as $row )
+		{
+			$ret['entry_ids'][] = $row['entry_id'];
+		}
+
+		return $ret;
+	}
+
+	// --------------------------------------------------------------
 
 	private function _save_params()
 	{
@@ -250,6 +291,7 @@ class Sift_core_model extends Sift_model {
 		// done
 		return;
 	}
+
 
 
 	
@@ -454,6 +496,73 @@ class Sift_core_model extends Sift_model {
 		return $t;
 	}
 
+
+	// --------------------------------------------------------------------
+
+	private function prep_low_search_channel( $params ) 
+	{
+		if ( class_exists('Channel') === FALSE )
+		{
+			require PATH_MOD.'channel/mod.channel'.EXT;
+		}
+
+		$settings = array('seperate_rows' => $this->force_single_matrix_rows );
+
+
+		$base = array();
+		foreach( $this->passed as $key => $val )
+		{
+			if( !is_array( $val ) ) $base[] = htmlentities($key) .'='.htmlentities($val);
+		}
+
+		// Cleanup
+		$base = str_replace( '+', '%2B', $base );
+		if( !empty( $base ) ) 
+		{
+			$base = $this->EE->uri->uri_string . '?' . implode( '&', $base );
+			$this->EE->TMPL->tagparams['paginate_base'] = $base;
+			$this->EE->uri->page_query_string = $base .'/P'.$this->offset;
+		}
+ 
+
+		$channel = new Channel;
+
+		$this->EE->TMPL->tagparams['limit'] = '25';
+
+		// Allow our specials to override
+		foreach( $this->specials as $key )
+		{
+			if( isset( $this->sift_data[ $key ] ) AND $this->sift_data[ $key ] != '' )
+			{
+				$this->EE->TMPL->tagparams[ $key ] = $this->sift_data[ $key ];
+			}
+		}
+
+		$this->EE->TMPL->tagparams['dynamic'] = FALSE;
+		$this->EE->TMPL->tagparams['entry_id'] = implode( '|', $entry_ids);
+		$this->EE->TMPL->tagparams['fixed_order'] = implode( '|', $entry_ids);
+		$this->EE->TMPL->tagparams['dynamic_parameters'] = FALSE;
+		unset( $this->EE->TMPL->tagparams['orderby'] );
+
+		// Add our markers to the channel object, so that the sift ext
+		// can jump in later and clean this up a bit
+		$this->EE->is_sift = TRUE;
+		$channel->is_sift = TRUE;
+
+		$this->EE->sift->sift_items = $items;
+		$channel->sift_items = $items;
+
+		$this->EE->sift->sift_order = $entry_ids;
+		$channel->sift_order = $entry_ids;
+
+		$this->EE->sift->settings = $settings;
+		$channel->sift_settings = $settings;
+
+		$t = $channel->entries();
+
+		return $t;
+	}
+
 	// --------------------------------------------------------------------
 
 	/* 
@@ -468,7 +577,6 @@ class Sift_core_model extends Sift_model {
 		// Step one - get the various ids we'll need
 		$status = $this->_collect_ids();
 		if( $status === FALSE ) return FALSE;
-
 		if( $this->check_cache('perform_sift', $this->sift_data, 'result_data' ) === FALSE )
 		{
 			// Step two - check the logical states we want
@@ -494,7 +602,6 @@ class Sift_core_model extends Sift_model {
 			{
 				$loose_ends_off = explode( '|', $this->sift_data['loose_ends_off'] );
 			}
-
 
 			// Step three - build up the query
 			if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
@@ -607,16 +714,13 @@ class Sift_core_model extends Sift_model {
 
 			$res = $this->EE->db->query( $sql )->result_array();
 
-
 			// No results (or bad query)
 			if( empty( $res ) ) return FALSE;
-
 
 			// Great! We have some actual matrix rows
 			// Now we need to actually pass them back up to the channel model
 			// and do something useful with them
 			// also cache perhaps
-
 
 			$this->result_data = $res;
 
@@ -645,7 +749,6 @@ class Sift_core_model extends Sift_model {
 		// be applied via the channel->entries class before we cleanup later
 		$matrix_field_id = FALSE;
 
-
 		if( $this->_isset_and_is_int( 'matrix_field_id', $this->sift_data ))
 		{
 			$matrix_field_id = $this->sift_data['matrix_field_id'];
@@ -664,11 +767,7 @@ class Sift_core_model extends Sift_model {
 			// Now get the id
 			$matrix_field_id = $this->EE->sift_data_model->get_matrix_id( $matrix_field_name );	
 		}
-
 		if( $matrix_field_id === FALSE ) return FALSE;
-
-
-
 
 		// Now get the cell column names and ids for this matrix field
 		$possible_cells = $this->EE->sift_data_model->get_cells_for_matrix( $matrix_field_id );
@@ -739,7 +838,6 @@ class Sift_core_model extends Sift_model {
 				}
 			}
 		}
-
 
 		// Nothing to do
 		$has_val = FALSE;
@@ -826,9 +924,11 @@ class Sift_core_model extends Sift_model {
 		* We need to split these out here, and drop them into the combined 
 		* category param for later passing over to the channel model
 		*/
-		function category_group_split( $var )
-		{
-			if( strpos( $var, 'category_group_' ) > -1 ) return $var;
+		if( !function_exists('category_group_split') ) {
+			function category_group_split( $var )
+			{
+				if( strpos( $var, 'category_group_' ) > -1 ) return $var;
+			}
 		}
 
 		$cats = array_filter( array_keys( $this->sift_data ), 'category_group_split' ); 
@@ -870,9 +970,10 @@ class Sift_core_model extends Sift_model {
 		* 	this is the syntax we piggy back the between: searching on
 		*/
 
-		function between_split( $var )
-		{
-			if( strpos( $var, 'between:' ) > -1 ) return $var;
+		if( !function_exists('betwee_split') ) {
+			function between_split( $var ) {
+				if( strpos( $var, 'between:' ) > -1 ) return $var;
+			}
 		}
 
 		$betweens = array_filter( array_keys( $this->sift_data), 'between_split' );
@@ -940,10 +1041,12 @@ class Sift_core_model extends Sift_model {
 		*  they are simply ignored
 		*/ 
 
-		function bound_split( $var )
-		{
-			if( strpos( $var, 'bound:' ) > -1 ) return $var;
+		if( !function_exists('bound_split')) {	
+			function bound_split( $var ) {
+				if( strpos( $var, 'bound:' ) > -1 ) return $var;
+			}
 		}
+	
 
 		$bounds = array_filter( array_keys( $this->sift_data), 'bound_split' );
 		$bounds = array_intersect_key( $this->sift_data, array_flip( $bounds ) );
@@ -1108,7 +1211,33 @@ class Sift_core_model extends Sift_model {
 	// --------------------------------------------------------------------
 	
 	/* 
-	* Gets any post passed params, cleans and checks them,
+	* Gets any passed params via Low search, prefixed with out sift marker
+	*/
+	private function _check_low_search($params)
+	{
+		if( empty($params) === TRUE ) return;
+
+		$tmp = array();
+		foreach( $params as $key => $val )
+		{
+			if( strpos($key, 'sift:') === 0 )
+			{
+				$tmp[ substr($key, 5) ] = $val;
+			}
+			elseif( $key == 'keywords' ) $tmp['keywords'] = $val;
+		}
+
+		// Pass over to the general cleanup and assign routine
+		$params = $this->_clean_and_assign_params( $params, TRUE );
+		$this->passed = array_merge( $params, $this->passed );
+	}
+
+
+
+	// --------------------------------------------------------------------
+	
+	/* 
+	* Gets any get passed params, cleans and checks them,
 	* and assigns to sift_data array
 	*/
 	private function _check_get()

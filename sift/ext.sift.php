@@ -45,7 +45,9 @@ class Sift_ext {
 	private $hooks = array(
 		'channel_entries_query_result',
 		'matrix_data_query',
-		'template_post_parse'
+		'template_post_parse',
+		'low_search_pre_search',
+		'low_search_post_search'
 	);
 
 	// --------------------------------------------------------------------
@@ -147,6 +149,7 @@ class Sift_ext {
 		// Update records using data array
 		$this->EE->db->where('class', $this->class_name);
 		$this->EE->db->update('extensions', $data);
+
 	}
 
 	// --------------------------------------------------------------------
@@ -164,6 +167,39 @@ class Sift_ext {
 		$this->EE->db->delete('extensions');
 	}
 
+
+	public function low_search_pre_search($params)
+	{
+		// Triggered from a low search
+		// our search fields will be prefixed with 'sift:'
+
+		$data = $this->EE->sift_core_model->handle_low_search($params);
+		$params['sift_searched'] = 'yes';
+		$params['sift_data'] = $data;
+		//$data = FALSE;
+		if( $data !== FALSE )
+		{	
+			if( isset($data['entry_ids']) )
+			{
+				$params['entry_id'] = implode('|', $data['entry_ids']);
+			}
+		}	
+
+		// @TODO
+
+		return $params;		
+	}
+
+
+	public function low_search_post_search($params)
+	{
+		// @TODO
+
+		return $params;		
+	}
+
+
+
 	public function template_post_parse( &$final, $sub, $site_id )
 	{
 		if( isset( $this->EE->config->_sifted_vars ) AND !empty( $this->EE->config->_sifted_vars ) )
@@ -176,6 +212,7 @@ class Sift_ext {
 		}
 		return $final;
 	}
+
 
 	public function channel_entries_query_result( &$that, $query_result )
 	{
@@ -262,6 +299,8 @@ class Sift_ext {
 		unset( $this->EE->is_sift );
 		return $this->EE->db->query( $sql );
 	}
+
+
 
 
 }

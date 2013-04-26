@@ -137,11 +137,6 @@ class Sift_upd {
 			return FALSE;
 		}
 
-		// if (version_compare($current, 'new-version', '<'))
-		// {
-		// 	// update to new version
-		// }
-
 		// Returning TRUE updates db version number
 		return TRUE;
 	}
