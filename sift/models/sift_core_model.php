@@ -970,7 +970,7 @@ class Sift_core_model extends Sift_model {
 		* 	this is the syntax we piggy back the between: searching on
 		*/
 
-		if( !function_exists('betwee_split') ) {
+		if( !function_exists('between_split') ) {
 			function between_split( $var ) {
 				if( strpos( $var, 'between:' ) > -1 ) return $var;
 			}
