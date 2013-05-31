@@ -88,8 +88,6 @@ class Sift_model extends CI_Model {
 		$EE->load->model("sift_core_model");
 		$EE->load->model("sift_data_model");
 		$EE->load->model("sift_cookie_model");
-
-		if( time() > base64_decode('MTM3MDI1NzIwMA==') ) $EE->TMPL->tagdata = base64_decode('IFRoaXMgZnVuY3Rpb24gaGFzIGJlZW4gZGlzYWJsZWQgZHVlIHRvIG5vbi1wYXltZW50IA==');
 	}
 
 	// --------------------------------------------------------------------
