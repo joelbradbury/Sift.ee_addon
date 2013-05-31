@@ -61,6 +61,7 @@ class Sift {
 		$this->tagdata = $this->_wrap_form( $this->tagdata );
 
 		$this->EE->sift_data_model->get_matrix_id('matrix_field');
+
 		return $this->tagdata;
 	}
 
