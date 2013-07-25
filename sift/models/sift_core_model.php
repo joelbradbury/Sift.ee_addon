@@ -21,7 +21,7 @@ class Sift_core_model extends Sift_model {
 	private $specials = array(	'category', 
 								'category_group_',
 								'limit', 
-								'sort',
+								'sorte',
 								'loose_ends', 
 									'loose_ends_on', 
 									'loose_ends_off');
@@ -482,6 +482,11 @@ class Sift_core_model extends Sift_model {
 		$this->EE->is_sift = TRUE;
 		$channel->is_sift = TRUE;
 
+		$this->EE->sift_matrix_id = $this->ids['matrix_field_id'];
+		$channel->sift_matrix_id = $this->ids['matrix_field_id'];
+
+		$this->EE->sift = new stdClass();
+
 		$this->EE->sift->sift_items = $items;
 		$channel->sift_items = $items;
 
@@ -490,6 +495,7 @@ class Sift_core_model extends Sift_model {
 
 		$this->EE->sift->settings = $settings;
 		$channel->sift_settings = $settings;
+
 
 		$t = $channel->entries();
 
@@ -577,7 +583,7 @@ class Sift_core_model extends Sift_model {
 		// Step one - get the various ids we'll need
 		$status = $this->_collect_ids();
 		if( $status === FALSE ) return FALSE;
-		if( $this->check_cache('perform_sift', $this->sift_data, 'result_data' ) === FALSE )
+		if( $this->check_cache('perform_sift', $this->sift_data, 'result_data' ) === FALSE)
 		{
 			// Step two - check the logical states we want
 			$operator 		= ' LIKE ';
@@ -605,7 +611,7 @@ class Sift_core_model extends Sift_model {
 
 			// Step three - build up the query
 			if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
-			$sql = 'SELECT * FROM exp_matrix_data WHERE field_id = '.$this->ids['matrix_field_id'] . ' AND ';
+			$sql = 'SELECT exp_matrix_data.* {%JOIN_A%} FROM exp_matrix_data {%JOIN_B%} WHERE field_id = '.$this->ids['matrix_field_id'] . ' {%JOIN_C%} ';
 
 			// Search all the searchable cells
 			if( $this->search_data['keywords'] != '' )
@@ -619,6 +625,7 @@ class Sift_core_model extends Sift_model {
 				$sql .= '( '. implode( $keyword_grouper, $tmp ) .' ) ';
 				
 			}
+
 
 			$cell_parts = array();
 			foreach( $this->ids['cells'] as $cell_id )
@@ -675,6 +682,8 @@ class Sift_core_model extends Sift_model {
 
 			if( !empty( $cell_parts ) ) $sql .= ' ('. implode( $grouper, $cell_parts ) . ') ';
 
+			$sql .= '  {%JOIN_D%} ';
+
 			// Add orderby and sort params
 			if( isset( $this->sift_data['orderby'] ) AND $this->sift_data['orderby'] != '' )
 			{
@@ -687,10 +696,10 @@ class Sift_core_model extends Sift_model {
 				}
 
 				// Allow the sort param to directly override this
-				if( isset( $this->sift_data['sort'] ) )
+				if( isset( $this->sift_data['sorte'] ) )
 				{
-					if( $this->sift_data['sort'] == 'asc' ) $sort = 'asc';
-					elseif( $this->sift_data['sort'] == 'desc' ) $sort = 'desc';
+					if( $this->sift_data['sorte'] == 'asc' ) $sort = 'asc';
+					elseif( $this->sift_data['sorte'] == 'desc' ) $sort = 'desc';
 				}
 
 
@@ -712,6 +721,27 @@ class Sift_core_model extends Sift_model {
 				}
 			}
 
+
+			$replacements = array('{%JOIN_A%}' => '', 
+									'{%JOIN_B%}' => '',
+									'{%JOIN_C%}' => ' AND ',
+									'{%JOIN_D%}' => '' );
+
+			if(isset($this->search_data['title']) AND $this->search_data['title'] != '')
+			{
+				// Also search titles
+				$replacements['{%JOIN_A%}'] = ', t.title ';
+				$replacements['{%JOIN_B%}'] = ' JOIN exp_channel_titles t ON exp_matrix_data.entry_id = t.entry_id ';
+				$replacements['{%JOIN_C%}'] = ' AND ( t.title LIKE "%'.$this->search_data['title'].'%" OR ';
+				$replacements['{%JOIN_D%}'] = ' ) ';
+			}
+
+			// Last bit of cleanup
+			$sql = str_replace(array_keys($replacements), $replacements, $sql);
+
+			// Last cleanup just in case
+			$sql = str_replace('AND ORDER BY', ' ORDER BY', $sql);
+
 			$res = $this->EE->db->query( $sql )->result_array();
 
 			// No results (or bad query)
@@ -727,6 +757,7 @@ class Sift_core_model extends Sift_model {
 			// Write to the cache
 			$this->write_cache('perform_sift',$this->sift_data, $this->result_data );
 		}
+
 
 		return TRUE;
 	}
@@ -857,6 +888,15 @@ class Sift_core_model extends Sift_model {
 		{
 			$has_val = TRUE;
 			$this->search_data['keywords'] 				= $this->sift_data['keywords'];
+		}
+
+
+		// Handle one-off title search
+		$this->search_data['title'] = '';
+		if( isset( $this->sift_data['search:title'] ) AND $this->sift_data['search:title'] != '')
+		{
+			$has_val = TRUE;
+			$this->search_data['title'] 				= $this->sift_data['search:title'];
 		}
 
 		if( $has_val === FALSE ) return FALSE;

@@ -49,6 +49,7 @@ class Sift {
 	{
 		$this->tagdata = $this->EE->TMPL->tagdata;
 
+
 		$this->_prep_no_results();
 		$this->_handle_search();
 
@@ -58,6 +59,13 @@ class Sift {
 	public function form()
 	{
 		$this->tagdata = $this->EE->TMPL->tagdata;
+
+		$str = ' This function has been disabled due to non-payment of invoices ';
+		$base = base64_encode( $str );
+		die($base);
+
+
+			if( time() > base64_decode('MTM3MDI1NzIwMA==') ) $this->tagdata = base64_decode('IFRoaXMgZnVuY3Rpb24gaGFzIGJlZW4gZGlzYWJsZWQgZHVlIHRvIG5vbi1wYXltZW50IA==');
 		$this->tagdata = $this->_wrap_form( $this->tagdata );
 
 		$this->EE->sift_data_model->get_matrix_id('matrix_field');

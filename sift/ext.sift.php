@@ -278,8 +278,15 @@ class Sift_ext {
 
 	public function matrix_data_query( $that, $params, $sql, $select_mode)
 	{
-		if( isset( $that->EE->is_sift ) AND isset( $that->EE->sift->sift_items ) ) 
+		if( isset( $that->EE->is_sift ) AND isset( $that->EE->sift->sift_items ))
 		{
+
+			// check this is the same matrix field we're sifting on
+			if( strpos($sql, 'field_id = '.$this->EE->sift_matrix_id) === FALSE)
+			{
+				return $this->EE->db->query( $sql );
+			}
+
 			$marker = ' ORDER BY ';
 
 			$extra = array();
