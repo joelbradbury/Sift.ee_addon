@@ -265,11 +265,23 @@ class Sift_ext {
 				// 2. Reorder as required
 				foreach( $that->sift_order as $row )
 				{
-					if( isset( $temp_array[ $row ] ) ) $clean_array[] = $temp_array[ $row ];
+					if( isset( $temp_array[ $row ] ) ) 
+					{
+						$clean_array[] = $temp_array[ $row ];
+					}
 				}
 
+				// Before 2.6.0? We can just return the simple array
+				// and let the channel model do it's thing
+				if(APP_VER < 2.6) return $clean_array;
 
-				return $clean_array;
+
+				// After 2.6.0 EL 'wisely' replaced the internal parsing logic
+				// of the channel model. 
+				// so all of our neat maniuplation is for naught
+				// We'll have to self process here on out.
+				$this->self_process($that, $clean_array);
+				ee()->extensions->end_script = TRUE;
 			}
 		}
 
@@ -307,6 +319,82 @@ class Sift_ext {
 		return $this->EE->db->query( $sql );
 	}
 
+
+
+	private function self_process($that, $query_result)
+	{
+		ee()->load->library('channel_entries_parser');
+		$parser = ee()->channel_entries_parser->create(ee()->TMPL->tagdata/*, $prefix=''*/);
+
+		$disable = array();
+
+		foreach ($that->enable as $k => $v)
+		{
+			if ($v === FALSE)
+			{
+				$disable[] = $k;
+			}
+		}
+
+		// Relate entry_ids to their entries for quick lookup and then parse
+		$entries = array();
+
+		foreach ($query_result as $i => $row)
+		{
+			unset($query_result[$i]);
+			if(isset($entries[$row['entry_id']]) )
+			{
+				// We have a duplicate
+				$entries['-1'.$i.$row['entry_id']] = $row;
+			}
+			else
+			{
+				$entries[$row['entry_id']] = $row;
+			}
+		}
+		
+		$data = array(
+			'entries'			=> $entries,
+			'categories'		=> $that->categories,
+			'absolute_results'	=> $that->absolute_results,
+			'absolute_offset'	=> $that->pagination->offset
+		);
+
+		$config = array(
+			'callbacks' => array(
+				'entry_row_data'	 => array($that, 'callback_entry_row_data'),
+				'tagdata_loop_start' => array($that, 'callback_tagdata_loop_start'),
+				'tagdata_loop_end'	 => array($that, 'callback_tagdata_loop_end')
+			),
+			'disable' => $disable
+		);
+
+
+		$that->return_data = $parser->parse($that, $data, $config);
+
+
+		unset($parser, $entries, $data);
+
+		if (function_exists('gc_collect_cycles'))
+		{
+			gc_collect_cycles();
+		}
+
+		// Kill multi_field variable
+		if (strpos($that->return_data, 'multi_field=') !== FALSE)
+		{
+			$that->return_data = preg_replace("/".LD."multi_field\=[\"'](.+?)[\"']".RD."/s", "", $that->return_data);
+		}
+
+		// Do we have backspacing?
+		if ($back = ee()->TMPL->fetch_param('backspace'))
+		{
+			if (is_numeric($back))
+			{
+				$that->return_data = substr($this->return_data, 0, - $back);
+			}
+		}
+	}
 
 
 

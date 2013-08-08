@@ -357,8 +357,7 @@ class Sift_core_model extends Sift_model {
 	// --------------------------------------------------------------------
 
 	private function _sift_matrix_tagdata()
-	{
-
+	{	
 		if( $this->force_single_matrix_rows === FALSE ) return;
 
 		// Do we actually _need_ to do anything?
@@ -690,7 +689,7 @@ class Sift_core_model extends Sift_model {
 				$sort = 'asc';
 
 				$sort_order = explode(":", $this->sift_data['orderby'] );
-				if( count( $sort_order > 1 ) )
+				if( count( $sort_order > 1 ) AND isset($sort_order[1]) )
 				{
 					if( strtolower($sort_order[1]) == 'desc' ) $sort = 'desc';
 				}
@@ -734,10 +733,18 @@ class Sift_core_model extends Sift_model {
 				$replacements['{%JOIN_B%}'] = ' JOIN exp_channel_titles t ON exp_matrix_data.entry_id = t.entry_id ';
 				$replacements['{%JOIN_C%}'] = ' AND ( t.title LIKE "%'.$this->search_data['title'].'%" OR ';
 				$replacements['{%JOIN_D%}'] = ' ) ';
+
+
+				// If there's nothing between our JOIN_C and JOIN_D elements, trim off the tail
+				if(strpos($sql, '{%JOIN_C%}   {%JOIN_D%}') > 0)
+				{
+					$replacements['{%JOIN_C%}'] = str_replace('OR', '', $replacements['{%JOIN_C%}']);
+				}
 			}
 
 			// Last bit of cleanup
 			$sql = str_replace(array_keys($replacements), $replacements, $sql);
+
 
 			// Last cleanup just in case
 			$sql = str_replace('AND ORDER BY', ' ORDER BY', $sql);
