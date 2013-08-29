@@ -332,7 +332,7 @@ class Matrix_file_ft {
 			// Parse legacy {filesize} tags
 			if (strpos($tagdata, 'filesize') !== FALSE)
 			{
-				$file_info['filesize'] = $this->_format_filesize($file_info['file_size'], array('format' => 'no'));
+				$file_info['filesize'] = $this->_format_filesize($file_info['upload_location_id'], $file_info['file_size'], array('format' => 'no'));
 			}
 
 			// Parse conditionals
@@ -354,7 +354,7 @@ class Matrix_file_ft {
 
 			return $tagdata;
 		}
-		else if ($file_info['path'] && $file_info['filename'] && $file_info['extension'] !== FALSE)
+		else if ($file_info['path'] && !empty($file_info['filename']) && $file_info['extension'] !== FALSE)
 		{
 			$full_path = $file_info['path'].$file_info['filename'].'.'.$file_info['extension'];
 

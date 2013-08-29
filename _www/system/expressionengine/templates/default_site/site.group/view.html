@@ -1,0 +1,49 @@
+{embed="inc/_head"}
+	
+
+<!-- Grid system
+================================================== -->
+<section>
+	
+	<div class="row">
+		<div class="span3">
+			<h2>Search</h2>
+			<p>Use <strong>Sift</strong> to search through matrix rows.</p>
+
+			
+		</div>
+
+		<div class="span9">
+			<h2>MultiView Test</h2>
+
+			{exp:sift:view
+				channel="tyres"
+				matrix_field="tyre_options"
+				keywords="green"}
+				
+				<h4>{title}</h4>
+
+				{if no_results}No results{/if}
+			{/exp:sift:view}
+
+
+			{exp:sift:view
+				channel="tyres"
+				matrix_field="tyre_options"
+				keywords="blue"}
+				
+				<h4>{title}</h4>
+
+				{if no_results}No results{/if}
+			{/exp:sift:view}
+
+
+		</div>
+		
+	</div>
+</section>
+
+
+<hr class="soften">
+
+{embed="inc/_foot"}

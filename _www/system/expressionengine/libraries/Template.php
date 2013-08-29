@@ -316,7 +316,6 @@ class EE_Template {
 		{
 			$this->log_item("Snippets (Keys): ".implode('|', array_keys($this->EE->config->_global_vars)));
 			$this->log_item("Snippets (Values): ".trim(implode('|', $this->EE->config->_global_vars)));
-		
 			foreach ($this->EE->config->_global_vars as $key => $val)
 			{
 				$this->template = str_replace(LD.$key.RD, $val, $this->template);
@@ -3114,6 +3113,7 @@ class EE_Template {
 
 		// Final Prep, Safety On		
 		$str = $this->EE->functions->prep_conditionals($str, array_merge($this->segment_vars, $this->embed_vars, $this->EE->config->_global_vars, $data), 'y');
+
 				
 		// Protect Already Existing Unparsed PHP		
 		$this->EE->load->helper('string');

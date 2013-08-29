@@ -5,7 +5,7 @@
  * Sift MCP Class
  *
  * @package         sift_ee_addon
- * @version         1.2.0
+ * @version         1.3.0
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/sift
  * @copyright       Copyright (c) 2013, Joel Bradbury

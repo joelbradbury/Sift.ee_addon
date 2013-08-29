@@ -1,10 +1,17 @@
 
 {exp:sift:form
 	return="/search"
-	matrix_field="tyre_options"}
+	matrix_field="tyre_options"
+	form_id="search_form"}
 
+	<img src="/assets/img/loader.gif" id="loading" style="display:none"/>
   	<div class="control-group">
 
+		<label for="keywords" class="span3">
+			Keywords
+			<input type="text" value="{keywords}" name="keywords" id="keywords"/>
+		</label>
+{!--
 		<select name="width_m" class="span3">Width M
 			<option value="">Width M</option>
 			{width_m}
@@ -40,10 +47,10 @@
 			{/height_i}
 		</select>
 
-		<select name="width_i" class="span3">
-			<option value="">Width I</option>
+		<select name="range:width_i" class="span3">
+			<option value="">Range : Width I</option>
 			{width_i}
-			    <option value="{value}" {if value=='{width_i}'}selected="selected"{/if}>{value}</option>
+			    <option value="{value}" {if value=='{range:width_i}'}selected="selected"{/if}>:{value}</option>
 			{/width_i}
 		</select>
 
@@ -71,41 +78,6 @@
 		</select>
 
 
-		<input type="text" name="between:width_m:profile" value="{between:width_m:profile}" placeholder="Between - offset_lower, offset_upper" />
-
-		<input type="text" name="range:diameter" value="{range:diameter}" placeholder="Range - diameter" />
-
-
-		{!--
-
-		<select name="category" class="span3">
-			<option value="">Categories</option>
-			{exp:channel:categories channel="wheels|tyres" group_id="1"}
-			    <option value="{category_id}">{category_name}</option>
-			{/exp:channel:categories}
-		</select>
-
-
-
-		<select name="category_group_1" class="span3">
-			<option value="">Categories</option>
-			{exp:channel:categories channel="wheels" cat_group="1"}
-			    <option value="{category_id}">{category_name}</option>
-			{/exp:channel:categories}
-		</select>
-
-
-
-		<select name="category_group_3" class="span3">
-			<option value="">Categories</option>
-			{exp:channel:categories channel="tyres" group_id="1"}
-			    <option value="{category_id}">{category_name}</option>
-			{/exp:channel:categories}
-		</select>
-		
-		--}
-
-
 		<select name="limit" class="span3">
 			<option value="">Limit</option>
 			<option value="1">1</option>
@@ -122,13 +94,17 @@
 			<option value="ply">Ply</option>
 		</select>
 
-
+		<label for="bound:width_i" class="span3">
+			Bound : Width I
+			<input type="number" value="{bound:width_i}" name="bound:width_i" id="bound:width_i"/>
+		</label>
 
 	    <label class="span3">
 		    <input type="checkbox" class="span1" name="seperate_view" value="yes" {if seperate_view=='yes'} checked="checked" {/if}> 
 		    Seperate Rows
-		</label>
+		</label>--}
+    <button type="submit" class="btn search-query">Search</button>
     </div>
 
-    <button type="submit" class="btn search-query">Search</button>
 {/exp:sift:form}
+

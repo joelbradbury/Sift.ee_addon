@@ -1,7 +1,9 @@
-div.matrix { position: relative; }
+div.publish_field.publish_matrix { overflow-x: auto; }
+
+div.matrix { position: relative;}
 *:first-child+html div.matrix { position: static; }
 
-table.matrix { position: relative; margin: 0 !important; width: 100%; border: 1px solid #b6c0c2;
+table.matrix { position: relative; margin: 0 !important; min-width: 100%; border: 1px solid #b6c0c2;
 	border-radius: 3px; -webkit-border-radius: 3px; -moz-border-radius: 4px;
 	-webkit-user-select: none; }
 *:first-child+html table.matrix { position: static; }
@@ -22,7 +24,7 @@ a.matrix-remove { background-image: url(../images/remove_btn.png); }
 /*-- table head --*/
 table.matrix thead.matrix { background: none; }
 table.matrix thead.matrix th.matrix,
-table.matrix thead.matrix td.matrix { padding: 1px 10px; border: none !important; border-right: 1px solid #ccc !important; border-right-color: rgba(0,0,0,0.1) !important; text-shadow: 0 1px #fff; }
+table.matrix thead.matrix td.matrix { padding: 1px 10px; border: none !important; border-right: 1px solid #ccc !important; border-right-color: rgba(0,0,0,0.1) !important; text-shadow: 0 1px #fff;}
 
 table.matrix thead.matrix th.matrix { color: inherit; line-height: 13px; background: #fff url(../images/thead_bg.png) repeat-x 0 1px;
 	background: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), to(rgba(0,0,0,0.06)));
@@ -156,3 +158,54 @@ td.matrix-file .matrix-thumb { position: relative; margin: 3px auto 0; }
 td.matrix-file .matrix-thumb a { display: block; position: absolute; top: -6px; left: -6px; width: 15px; height: 15px; background: url(../images/remove_file_btn.png) no-repeat; cursor: pointer; }
 td.matrix-file .matrix-filename { font-size: 10px; line-height: 15px; }
 td.matrix-file a.matrix-add { display: inline-block; padding: 0 10px 0 21px; width: auto; line-height: 20px; white-space: nowrap; }
+
+
+/*-- rte cell styles --*/
+td.matrix-rte {
+	padding: 0 !important;
+	border-width: 1px 1px 0 0 !important;
+}
+
+td.matrix-rte .WysiHat-container {
+	width: auto !important;
+	font-size: 0;
+}
+
+td.matrix-rte textarea.WysiHat-field,
+td.matrix-rte .WysiHat-editor {
+	-webkit-user-select: auto; /* this is vital for contenteditable to work in WysiHat */
+	border-width: 0;
+	border-radius: 0;
+	-webkit-border-radius: 0;
+	-moz-border-radius: 0;
+	resize: none;
+}
+
+td.matrix-rte .WysiHat-editor-toolbar {
+	border-width: 0 0 1px 0;
+	border-color: #E3E3E3;
+	border-radius: 0;
+	-webkit-border-radius: 0;
+	-moz-border-radius: 0;
+}
+
+td.matrix-rte textarea.WysiHat-field:focus,
+td.matrix-rte .WysiHat-editor:focus {
+	border-width: 2px 1px 1px 1px;
+	border-style: solid;
+	border-color: #E3E3E3;
+	padding: 2px 3px 3px 3px;
+	background-color: #FFF;
+}
+
+td.matrix-rte.matrix-last textarea.WysiHat-field:focus,
+td.matrix-rte.matrix-last .WysiHat-editor:focus {
+	border-right-width: 2px;
+	padding-right: 2px;
+}
+
+td.matrix-rte.matrix-firstcell textarea.WysiHat-field:focus,
+td.matrix-rte.matrix-firstcell .WysiHat-editor:focus {
+	border-left-width: 2px;
+	padding-left: 2px;
+}

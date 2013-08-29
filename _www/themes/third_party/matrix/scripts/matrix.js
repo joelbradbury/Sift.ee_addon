@@ -35,7 +35,10 @@ Matrix = function(field, inputName, label, cols, rowInfo, minRows, maxRows) {
 	obj.id = inputName;
 	obj.label = label;
 	obj.cols = cols;
+	obj.totalCols = obj.cols.length;
 	obj.rows = [];
+	obj.totalRows = 0;
+	obj.totalNewRows = 0;
 	obj.minRows = minRows;
 	obj.maxRows = maxRows;
 
@@ -48,6 +51,10 @@ Matrix = function(field, inputName, label, cols, rowInfo, minRows, maxRows) {
 	obj.dom.$tbody = $('> tbody:first', obj.dom.$table);
 	obj.dom.$addBtn = $('> a.matrix-add:first', obj.dom.$field);
 
+	obj.$tab = $();
+	obj.$ee1Label = $();
+	obj.$ee2Label = $();
+
 	// -------------------------------------------
 	//  Menu
 	// -------------------------------------------
@@ -59,7 +66,10 @@ Matrix = function(field, inputName, label, cols, rowInfo, minRows, maxRows) {
 	});
 	obj.menu.$addAbove = $('<li>'+Matrix.lang.add_row_above+'</li>').appendTo(obj.menu.$ul);
 	obj.menu.$addBelow = $('<li>'+Matrix.lang.add_row_below+'</li>').appendTo(obj.menu.$ul);
-	obj.menu.$ul.append($('<li class="br" />'));
+	obj.menu.$ul.append('<li class="br" />');
+    obj.menu.$moveToTop = $('<li>'+Matrix.lang.move_to_top+'</li>').appendTo(obj.menu.$ul);
+    obj.menu.$moveToBottom = $('<li>'+Matrix.lang.move_to_bottom+'</li>').appendTo(obj.menu.$ul);
+    obj.menu.$ul.append('<li class="br" />');
 	obj.menu.$delete = $('<li>'+Matrix.lang.delete_row+'</li>').appendTo(obj.menu.$ul);
 
 	obj.menu.reset = function(){
@@ -68,14 +78,13 @@ Matrix = function(field, inputName, label, cols, rowInfo, minRows, maxRows) {
 		var stopPropagation = function(e){ e.stopPropagation(); };
 		obj.menu.$addAbove.unbind().bind('mousedown', stopPropagation);
 		obj.menu.$addBelow.unbind().bind('mousedown', stopPropagation);
+		obj.menu.$moveToTop.unbind().bind('mousedown', stopPropagation);
+		obj.menu.$moveToBottom.unbind().bind('mousedown', stopPropagation);
 		obj.menu.$delete.unbind().bind('mousedown', stopPropagation);
+
 	};
 
 	obj.menu.showing = false;
-
-	// -------------------------------------------
-	//  Initialize the original rows
-	// -------------------------------------------
 
 	// get the "No rows yet" row if it's there
 	obj.dom.$norows = $('> tr.matrix-norows:first-child', obj.dom.$tbody);
@@ -83,38 +92,93 @@ Matrix = function(field, inputName, label, cols, rowInfo, minRows, maxRows) {
 		obj.addRow();
 	});
 
-	// initialize any remaining rows
-	$('> tr', obj.dom.$tbody).not(obj.dom.$norows).each(function(index){
-		var row = new Matrix.Row(obj, index, rowInfo[index].id, rowInfo[index].cellSettings, this);
-		obj.rows.push(row);
-	});
+	/**
+	 * Initialize Existing Rows
+	 */
+	obj.initRows = function(){
+        $('> tr', obj.dom.$tbody).not(obj.dom.$norows).each(function(index){
+            var rowID = $(this).find('th > input').val() || $(this).parents('table').next('input').val();
+            var row = new Matrix.Row(obj, index, rowID, rowInfo, this);
+            obj.rows.push(row);
+        });
 
-	obj.totalCols = obj.cols.length;
-	obj.totalRows = obj.rows.length;
-	obj.totalNewRows = 0;
+		obj.totalRows = obj.rows.length;
+	};
 
-	// click anywhere to blur the focussed cell
-	$document.mousedown(function(){
-		if (obj.ignoreThisClick) {
-			obj.ignoreThisClick = false;
-			return;
-		}
+	obj.initRowsIfVisible = function(){
+		setTimeout(function() {
+			if (! obj.initialized && obj.dom.$field.height()) {
+				// stop listening for tab/label clicks
+				obj.$tab.unbind('click'+obj.namespace);
+				obj.$ee1Label.unbind('click'+obj.namespace);
+				obj.$ee2Label.unbind('click'+obj.namespace);
 
-		if (obj.focussedCell) {
-			obj.focussedCell.blur();
-		}
-	});
+				obj.initRows();
+			}
+		}, 100);
+	};
+
+	// only initialize if the field is already visible
+	if (obj.dom.$field.height())
+		obj.initRows();
+	else {
+		obj.initialized = false;
+
+		// wait for its tab/label to be clicked on
+		var $tabDiv = obj.dom.$field.closest('.main_tab'),
+			tabId = 'menu_'+$tabDiv.attr('id');
+		obj.$tab = $('#'+tabId+' a');
+		obj.$ee1Label = obj.dom.$field.closest('.publishRows').children(':first').find('label');
+		obj.$ee2Label = obj.dom.$field.closest('.publish_field').find('label.hide_field span');
+
+		obj.namespace = '.matrix-'+obj.dom.$field.attr('id');
+		obj.$tab.bind('click'+obj.namespace, obj.initRowsIfVisible);
+		obj.$ee1Label.bind('click'+obj.namespace, obj.initRowsIfVisible);
+		obj.$ee2Label.bind('click'+obj.namespace, obj.initRowsIfVisible);
+	}
 
 	// -------------------------------------------
 	//  Row Management
 	// -------------------------------------------
+
+    obj.moveRow = function (rowObject, direction) {
+
+        // beforeSort callback
+        rowObject.callback('beforeSort', 'onBeforeSortRow');
+
+        if (direction == "bottom") {
+
+            targetIndex = rowObject.field.totalRows - 1;
+            rowObject.field.rows[targetIndex].dom.$tr.after(rowObject.field.rows[rowObject.index].dom.$tr);
+
+        } else {
+
+            targetIndex = 0;
+            rowObject.field.rows[targetIndex].dom.$tr.before(rowObject.field.rows[rowObject.index].dom.$tr);
+
+        }
+
+        // update field.rows array
+        rowObject.field.rows.splice(rowObject.index, 1);
+        rowObject.field.rows.splice(targetIndex, 0, rowObject);
+
+        for (var i = 0; i <= rowObject.field.totalRows; i++) {
+            if (typeof rowObject.field.rows[i] != "undefined") {
+                rowObject.field.rows[i].updateIndex(i);
+             }
+        }
+
+        // afterSort callback
+        rowObject.callback('afterSort', 'onSortRow');
+
+    };
 
 	/**
 	 * Add Row
 	 */
 	obj.addRow = function(index){
 		// deny if we're already at the maximum rows
-		if (obj.maxRows && obj.totalRows == obj.maxRows) return;
+		if (obj.maxRows && obj.totalRows >= obj.maxRows) return;
 
 		// is this the first row?
 		if (obj.totalRows == 0) {
@@ -199,10 +263,8 @@ Matrix = function(field, inputName, label, cols, rowInfo, minRows, maxRows) {
 			obj.rows[i].updateIndex(i);
 		}
 
-		// disable add row button?
-		if (obj.maxRows && obj.totalRows == obj.maxRows) {
-			obj.dom.$addBtn.addClass('matrix-btn-disabled');
-		}
+		// update the add row button state
+		obj.setAddBtnState();
 
 		return row;
 	};
@@ -212,7 +274,7 @@ Matrix = function(field, inputName, label, cols, rowInfo, minRows, maxRows) {
 	 */
 	obj.removeRow = function(index) {
 		// deny if the row doesn't exist (somehow?), or if we're at the minimum
-		if (typeof index == 'undefined' || typeof obj.rows[index] == 'undefined' || obj.totalRows == obj.minRows) return false;
+		if (typeof index == 'undefined' || typeof obj.rows[index] == 'undefined' || obj.totalRows <= obj.minRows) return false;
 
 		var row = obj.rows[index];
 
@@ -250,15 +312,30 @@ Matrix = function(field, inputName, label, cols, rowInfo, minRows, maxRows) {
 			}
 		}
 
-		// enable add row button?
-		if (obj.maxRows && obj.totalRows < obj.maxRows) {
+		// update the add row button state
+		obj.setAddBtnState();
+	};
+
+	obj.setAddBtnState = function(){
+		if (obj.maxRows && obj.totalRows >= obj.maxRows) {
+			obj.dom.$addBtn.addClass('matrix-btn-disabled');
+		} else {
 			obj.dom.$addBtn.removeClass('matrix-btn-disabled');
 		}
 	};
 
-	obj.dom.$addBtn.click(function(){
-		if (! obj.dom.$addBtn.hasClass('matrix-btn-disabled')) {
-			obj.addRow();
+	// Add Row button
+	obj.dom.$addBtn.click(obj.addRow);
+
+	// click anywhere to blur the focussed cell
+	$document.mousedown(function(){
+		if (obj.ignoreThisClick) {
+			obj.ignoreThisClick = false;
+			return;
+		}
+
+		if (obj.focussedCell) {
+			obj.focussedCell.blur();
 		}
 	});
 
@@ -327,7 +404,11 @@ Matrix.Row = function(field, index, id, cellSettings, tr){
 	 * Remove
 	 */
 	obj.remove = function(){
-		obj.dom.$tr.remove();
+		// Simply removing the <tr> causes issues with succeeding CKEditor instances
+		// for some reason (the <iframe> contentWindow properties become null??).
+		// So rather than calling $tr.remove(), we'll just hide it and remove its row_order input.
+		obj.dom.$tr.hide();
+		obj.dom.$tr.children('th:first').children('input:first').remove();
 	};
 
 	// -------------------------------------------
@@ -401,6 +482,24 @@ Matrix.Row = function(field, index, id, cellSettings, tr){
 		// -------------------------------------------
 
 		obj.field.menu.reset();
+
+        if (obj.field.totalRows < 2) {
+            obj.field.menu.$moveToTop.addClass('disabled');
+            obj.field.menu.$moveToBottom.addClass('disabled');
+        } else {
+            obj.field.menu.$moveToTop.removeClass('disabled');
+            obj.field.menu.$moveToBottom.removeClass('disabled');
+
+            obj.field.menu.$moveToTop.unbind('click').bind('click', function () {
+                obj.field.moveRow(obj, 'top');
+                getRowAttributes();
+
+            });
+            obj.field.menu.$moveToBottom.unbind('click').bind('click', function () {
+                obj.field.moveRow(obj, 'bottom');
+                getRowAttributes();
+            });
+        }
 
 		if (obj.field.minRows && obj.field.totalRows <= obj.field.minRows) {
 			// disable Delete Row option
@@ -621,7 +720,7 @@ Matrix.Row = function(field, index, id, cellSettings, tr){
 					obj.cells[i].clearWidth();
 				}
 
-				// sort callback
+				// afterSort callback
 				obj.callback('afterSort', 'onSortRow');
 
 			});
@@ -775,8 +874,5 @@ Matrix.unbind = function(celltype, event){
 
 	delete callbacks[event][celltype];
 };
-
-
-
 
 })(jQuery);

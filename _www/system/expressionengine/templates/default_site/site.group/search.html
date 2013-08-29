@@ -10,14 +10,17 @@
 	</div>
 	<div class="row">
 		<div class="span3">
-			<h2>Search</h2>
+			<h2 id="search_title">Search</h2>
 			<p>Use <strong>Sift</strong> to search through matrix rows.</p>
 
 			{embed="inc/_search_form"}
 
 		</div>
 		<div class="span9">
-			
+			<div id="search_results">
+
+
+
 
 			{exp:sift:view
 				channel="tyres"
@@ -55,7 +58,7 @@
 	              		<td>{diameter}</td>
 	              		<td>{load_speed}</td>
 	              		<td>{height_i}</td>
-	              		<td>{width_i}</td>
+	              		<td>=={width_i}</td>
 	              		<td>{ply}</td>
 	              		<td>{price}</td>
 	              	</tr>
@@ -75,6 +78,7 @@
 		        {/if}
 
 			{/exp:sift:view}
+			</div>
 
 			
 		</div>

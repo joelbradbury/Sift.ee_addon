@@ -56,6 +56,7 @@ class Matrix_date_ft {
 			// include matrix_text.js
 			$theme_url = $this->EE->session->cache['matrix']['theme_url'];
 			$this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_url.'scripts/matrix_date_ee2.js"></script>');
+			$this->EE->cp->add_js_script(array('ui' => 'datepicker'));
 
 			$this->cache['displayed'] = TRUE;
 		}
