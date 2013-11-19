@@ -4,9 +4,9 @@
  * Sift Module Class
  *
  * @package         sift_ee_addon
- * @version         1.3.0
+ * @version         1.3.1
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
- * @link            http://squarebit.co.uk/sift
+ * @link            http://squarebit.co.uk/addons/sift
  * @copyright       Copyright (c) 2013, Joel Bradbury
  */
 
@@ -15,7 +15,7 @@ include PATH_THIRD.'sift/config'.EXT;
 
 
 class Sift {
-	
+
 	public $return_data;
 	private $EE;
 	private $tagdata;
@@ -60,12 +60,6 @@ class Sift {
 	{
 		$this->tagdata = $this->EE->TMPL->tagdata;
 
-		$str = ' This function has been disabled due to non-payment of invoices ';
-		$base = base64_encode( $str );
-		die($base);
-
-
-			if( time() > base64_decode('MTM3MDI1NzIwMA==') ) $this->tagdata = base64_decode('IFRoaXMgZnVuY3Rpb24gaGFzIGJlZW4gZGlzYWJsZWQgZHVlIHRvIG5vbi1wYXltZW50IA==');
 		$this->tagdata = $this->_wrap_form( $this->tagdata );
 
 		$this->EE->sift_data_model->get_matrix_id('matrix_field');
@@ -76,13 +70,13 @@ class Sift {
 
 	private function _handle_search()
 	{
-		/* Hand this whole thing over to the 
+		/* Hand this whole thing over to the
 			Sift core model to do all the heavy lifting
 			Mostly this is just to keep this mod. file nice
 			and clean and clutter free */
 
 		$return = $this->EE->sift_core_model->handle_search();
-		if( $return === FALSE ) 
+		if( $return === FALSE )
 		{
 			// Something was invalid in the search set
 			$this->tagdata = $this->EE->TMPL->no_results; //ie('invalid search');
@@ -97,7 +91,7 @@ class Sift {
 
 
 
-	/* 
+	/*
 	* Quick helper function that wraps tagdata
 	* in an opening and closing form tags
 	* and also adds some hidden fields while it's at it
@@ -118,9 +112,9 @@ class Sift {
 		$form_id 	= $form_id != '' ? ' id="'.$form_id.'"' : '';
 		$form_method= $form_method != '' ? 'get' : $form_method;
 
-		// Get the action_id 
+		// Get the action_id
 		$action_url = $this->EE->functions->fetch_site_index(). '/search';
-		if( $this->EE->TMPL->fetch_param('return') != '' ) $action_url = $this->EE->TMPL->fetch_param('return'); 
+		if( $this->EE->TMPL->fetch_param('return') != '' ) $action_url = $this->EE->TMPL->fetch_param('return');
 
 		$hidden = '<input type="hidden" name="sift_search" value="yes"/>';
 		$bare = "<form name='sift_form'". $form_class . $form_id ." method='".$form_method."' action='".$action_url."'>";
@@ -144,9 +138,9 @@ class Sift {
 		$t = $this->EE->TMPL->parse_variables(
 				$tagdata,
 				array($data),
-				TRUE 
+				TRUE
 			);
-			
+
 		return $t;
 	}
 

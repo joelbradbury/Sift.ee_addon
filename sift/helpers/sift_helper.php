@@ -4,9 +4,9 @@
  * Sift helper class
  *
  * @package         sift_ee_addon
- * @version         1.3.0
+ * @version         1.3.1
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
- * @link            http://squarebit.co.uk/sift
+ * @link            http://squarebit.co.uk/addons/sift
  * @copyright       Copyright (c) 2013, Joel Bradbury
  */
 
@@ -15,16 +15,16 @@
 /**
  * Object to Array
  *
- * From a multi-dimensional object return a 
+ * From a multi-dimensional object return a
  * usable multi-dimensional array
  *
  * @param      array
- * @param 	   bool 
+ * @param 	   bool
  * @return     array
  */
 if ( ! function_exists('Sift_obj_to_array'))
 {
-	function Sift_obj_to_array($obj, $clean = FALSE, $convert = array() ) 
+	function Sift_obj_to_array($obj, $clean = FALSE, $convert = array() )
 	{
 
 	    if(is_object($obj)) $obj = (array) $obj;
@@ -35,7 +35,7 @@ if ( ! function_exists('Sift_obj_to_array'))
 
 	        foreach($obj as $key => $val) {
 
-	        	if( $clean ) 
+	        	if( $clean )
 	        	{
 		        	$key = str_replace( '-', '_', $key );
 

@@ -4,9 +4,9 @@
  * Sift Extension Class
  *
  * @package         sift_ee_addon
- * @version         1.3.0
+ * @version         1.3.1
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
- * @link            http://squarebit.co.uk/sift
+ * @link            http://squarebit.co.uk/addons/sift
  * @copyright       Copyright (c) 2013, Joel Bradbury
  */
 
@@ -178,16 +178,16 @@ class Sift_ext {
 		$params['sift_data'] = $data;
 		//$data = FALSE;
 		if( $data !== FALSE )
-		{	
+		{
 			if( isset($data['entry_ids']) )
 			{
 				$params['entry_id'] = implode('|', $data['entry_ids']);
 			}
-		}	
+		}
 
 		// @TODO
 
-		return $params;		
+		return $params;
 	}
 
 
@@ -195,7 +195,7 @@ class Sift_ext {
 	{
 		// @TODO
 
-		return $params;		
+		return $params;
 	}
 
 
@@ -219,7 +219,7 @@ class Sift_ext {
 		if( isset( $that->is_sift ) AND $that->is_sift === TRUE )
 		{
 
-			// Drop a marker on the EE object to keep track of this 
+			// Drop a marker on the EE object to keep track of this
 			// object loop
 			$this->EE->is_sift = TRUE;
 			$this->EE->sift_items = $that->sift_items;
@@ -237,18 +237,18 @@ class Sift_ext {
 			$new_order = array();
 			$old_order = $query_result;
 
-			// 1. Do we need to do anything - only actually req'd 
-			// if there are repeats in the sift_order 
+			// 1. Do we need to do anything - only actually req'd
+			// if there are repeats in the sift_order
 			$entry_items = array();
 			$cleanup = FALSE;
 
 			foreach( $that->sift_order as $row )
 			{
-				if( isset( $entry_items[ $row ] ) ) 
+				if( isset( $entry_items[ $row ] ) )
 				{
 					$cleanup = TRUE;
 				}
-				
+
 				$entry_items[ $row ] = array();
 			}
 
@@ -265,7 +265,7 @@ class Sift_ext {
 				// 2. Reorder as required
 				foreach( $that->sift_order as $row )
 				{
-					if( isset( $temp_array[ $row ] ) ) 
+					if( isset( $temp_array[ $row ] ) )
 					{
 						$clean_array[] = $temp_array[ $row ];
 					}
@@ -277,7 +277,7 @@ class Sift_ext {
 
 
 				// After 2.6.0 EL 'wisely' replaced the internal parsing logic
-				// of the channel model. 
+				// of the channel model.
 				// so all of our neat maniuplation is for naught
 				// We'll have to self process here on out.
 				$this->self_process($that, $clean_array);
@@ -309,8 +309,8 @@ class Sift_ext {
 			$extra_sql = ' AND row_id IN ('. implode(',', $extra).') ';
 
 			// Ok, rework the sql to just get the rows we know we need
-			$sql_new = str_replace( $marker, $extra_sql . $marker , $sql );	
-			
+			$sql_new = str_replace( $marker, $extra_sql . $marker , $sql );
+
 			return $this->EE->db->query( $sql_new );
 		}
 
@@ -352,7 +352,7 @@ class Sift_ext {
 				$entries[$row['entry_id']] = $row;
 			}
 		}
-		
+
 		$data = array(
 			'entries'			=> $entries,
 			'categories'		=> $that->categories,

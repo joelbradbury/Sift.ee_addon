@@ -4,9 +4,9 @@
  * Sift Data Model class
  *
  * @package         sift_ee_addon
- * @version         1.3.0
+ * @version         1.3.1
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
- * @link            http://squarebit.co.uk/sift
+ * @link            http://squarebit.co.uk/addons/sift
  * @copyright       Copyright (c) 2013, Joel Bradbury
  */
 class Sift_data_model extends Sift_model {
@@ -32,7 +32,7 @@ class Sift_data_model extends Sift_model {
 		$this->initialize(
 			'sift_data',
 			'data_id',
-			array(	
+			array(
 				'site_id'       		=> 'int(4) unsigned NOT NULL',
 				'channel_id'			=> 'int(4) unsigned NOT NULL',
 				'matrix_id'				=> 'int(4) unsigned NOT NULL',
@@ -54,7 +54,7 @@ class Sift_data_model extends Sift_model {
 		// Nothing to install
 	}
 
-	
+
 	public function get_cell_possible_values( $cell_id )
 	{
 		static $cell_possible_values;
@@ -102,7 +102,7 @@ class Sift_data_model extends Sift_model {
 				// Now reorder the values
 				array_multisort($tmp);
 			}
-			
+
 			// Serialize and store in cache
 			$ser = serialize( $tmp );
 
@@ -135,7 +135,7 @@ class Sift_data_model extends Sift_model {
 						->row_array();
 
 		if( empty( $row ) ) $matrix_field_data['id'][ $matrix_field_id ] = FALSE;
-		else 
+		else
 		{
 			$matrix_field_data['id'][ $matrix_field_id ] = $row['field_name'];
 
@@ -163,7 +163,7 @@ class Sift_data_model extends Sift_model {
 						->row_array();
 
 		if( empty( $row ) ) $matrix_field_data['name'][ $matrix_field_name ] = FALSE;
-		else 
+		else
 		{
 			$matrix_field_data['name'][ $matrix_field_name ] = $row['field_id'];
 
@@ -194,7 +194,7 @@ class Sift_data_model extends Sift_model {
 						->order_by('col_order','asc')
 						->get('matrix_cols')
 						->result_array();
-		if( empty( $res ) ) 
+		if( empty( $res ) )
 		{
 			$matrix_field_data['cell'][ $matrix_field_id ] = FALSE;
 			return FALSE;

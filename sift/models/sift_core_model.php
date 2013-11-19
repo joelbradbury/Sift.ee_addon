@@ -4,9 +4,9 @@
  * Sift Core Model class
  *
  * @package         sift_ee_addon
- * @version         1.3.0
+ * @version         1.3.1
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
- * @link            http://squarebit.co.uk/sift
+ * @link            http://squarebit.co.uk/addons/sift
  * @copyright       Copyright (c) 2013, Joel Bradbury
  */
 class Sift_core_model extends Sift_model {
@@ -18,12 +18,12 @@ class Sift_core_model extends Sift_model {
 	private $tagdata;
 	private $matrix_field_name;
 	private $seperate_matrix_row_limit = 99;
-	private $specials = array(	'category', 
+	private $specials = array(	'category',
 								'category_group_',
-								'limit', 
+								'limit',
 								'sorte',
-								'loose_ends', 
-									'loose_ends_on', 
+								'loose_ends',
+									'loose_ends_on',
 									'loose_ends_off');
 	private $force_single_matrix_rows = FALSE;
 	private $var_prefix 	= 'sift:';
@@ -54,7 +54,7 @@ class Sift_core_model extends Sift_model {
 		$this->initialize(
 			'sift_core',
 			'set_id',
-			array(	
+			array(
 				'site_id'       		=> 'int(4) unsigned NOT NULL',
 				'channel_id'			=> 'int(4) unsigned NOT NULL',
 				'matrix_id'				=> 'int(4) unsigned NOT NULL',
@@ -88,11 +88,13 @@ class Sift_core_model extends Sift_model {
 		$data = array('tagdata' => $tagdata );
 
 		// Check the field passed is valid
-		$matrix_field_id = $this->EE->sift_data_model->get_matrix_id( $matrix_field );	
+		$matrix_field_id = $this->EE->sift_data_model->get_matrix_id( $matrix_field );
 		if( $matrix_field_id === FALSE ) return FALSE;
 
 		// Now get the cells and possible values
 		$cells = $this->EE->sift_data_model->get_cells_for_matrix( $matrix_field_id );
+
+		if(!is_array($cells)) return FALSE;
 
 		// Setup a blank data array for blank population
 		$blank = array();
@@ -103,13 +105,13 @@ class Sift_core_model extends Sift_model {
 			$blank[ $cell_name ] = '';
 			$blank[ 'col_id_'.$cell_id ] = '';
 
-			
+
 			if ( preg_match("|" . LD . $cell_name . RD . "(.*)". LD . '/' . $cell_name . RD . "|s", $tagdata, $match))
 			{
 				// There is a match!
 				// Kick into collection and population mode
 				$data['options'][ $cell_name ] = $this->EE->sift_data_model->get_cell_possible_values( $cell_id );
-			}		
+			}
 
 			// Also setup ALL the variants for {range:..} {bound:..} and {between:..:..} vars
 			$blank[ 'range:'.$cell_name] = '';
@@ -133,17 +135,17 @@ class Sift_core_model extends Sift_model {
 			// We have sub-options, we need to parse this in the tagdata
 			foreach( $data['options'] as $cell_name => $options )
 			{
-				// Find the matching markers in the tagdata					
+				// Find the matching markers in the tagdata
 				if ( preg_match("|" . LD . $cell_name . RD . "(.*)". LD . '/' . $cell_name . RD . "|s", $tagdata, $match))
 				{
 					// Build up the data array and pass over to native parse_variables
-					foreach( $options as $option ) 
+					foreach( $options as $option )
 					{
 						$vars[ $cell_name ][] = array( 'value' => $option );
 					}
 
 					$tagdata = $this->EE->TMPL->parse_variables( $tagdata, array($vars) );
-				}	
+				}
 			}
 		}
 
@@ -156,7 +158,7 @@ class Sift_core_model extends Sift_model {
 	// --------------------------------------------------------------
 
 	public function handle_get_post()
-	{	
+	{
 		$this->sift_data = array();
 
 		$this->_check_tmpl();
@@ -166,7 +168,7 @@ class Sift_core_model extends Sift_model {
 
 
 		// Clean it up for now
-		foreach( $this->sift_data as $key => $val ) 
+		foreach( $this->sift_data as $key => $val )
 		{
 			if( is_array( $val ) ) unset( $this->sift_data[ $key ] );
 		}
@@ -178,7 +180,7 @@ class Sift_core_model extends Sift_model {
 
 	public function handle_search()
 	{
-		/* There are 3 options for getting the sift parameters 
+		/* There are 3 options for getting the sift parameters
 			in the following order of precendence :
 				1. TMPL Params
 				2. POST Data
@@ -188,7 +190,7 @@ class Sift_core_model extends Sift_model {
 			and those that if supplied via TMPL cannot be overridden
 			by GET or POST data */
 
-		// Clear it out just in case		
+		// Clear it out just in case
 		$this->sift_data = array();
 
 		$this->_check_tmpl();
@@ -198,26 +200,25 @@ class Sift_core_model extends Sift_model {
 		// Ok, the sift_data array should be nice and neat for us now
 		// Lets have a quick shifty to see if there's anything to do
 
-		// Here would be a good place to check some cache 
-		// @TODO
+		// Here would be a good place to check some cache
 		// $this->check_cache();
 
 		$status = $this->_validate_sift_data();
-		if( $status == FALSE ) 
+		if( $status == FALSE )
 		{
-			/* Something failed the validation, we're not going 
-			* 	to even try to do any searching, return False 
+			/* Something failed the validation, we're not going
+			* 	to even try to do any searching, return False
 			*/
 			return FALSE;
 		}
 		// Log these search terms as cookies for the user
 		$this->_save_params();
 
-		// Ok, it seems good, now try and do some real search 
+		// Ok, it seems good, now try and do some real search
 		$status = $this->_perform_sift();
 		if( $status == FALSE ) return FALSE;
 
-		// The result data should be in $result_data, do a quick sanity check 
+		// The result data should be in $result_data, do a quick sanity check
 		if( empty( $this->result_data ) ) return FALSE;
 
 		// Now, actually use the data for something we need
@@ -236,26 +237,26 @@ class Sift_core_model extends Sift_model {
 		 	data has already been parsed and cleaned, we just
 		 	need to grab out the parts that are interesting to us */
 
-		// Clear it out just in case		
+		// Clear it out just in case
 		$this->sift_data = array();
 		$this->_check_low_search($params);
 
 		// Ok, the sift_data array should be nice and neat for us now
 		// Lets have a quick shifty to see if there's anything to do
 		$status = $this->_validate_sift_data();
-		if( $status == FALSE ) 
+		if( $status == FALSE )
 		{
-			/* Something failed the validation, we're not going 
-			* 	to even try to do any searching, return False 
+			/* Something failed the validation, we're not going
+			* 	to even try to do any searching, return False
 			*/
 			return FALSE;
 		}
 
-		// Ok, it seems good, now try and do some real search 
+		// Ok, it seems good, now try and do some real search
 		$status = $this->_perform_sift();
 		if( $status == FALSE ) return FALSE;
 
-		// The result data should be in $result_data, do a quick sanity check 
+		// The result data should be in $result_data, do a quick sanity check
 		if( empty( $this->result_data ) ) return FALSE;
 
 		// We don't need to parse this, just wrap some things up and pass it back to low search
@@ -294,10 +295,10 @@ class Sift_core_model extends Sift_model {
 
 
 
-	
+
 	// --------------------------------------------------------------------
 
-	/* 
+	/*
 	* Does the hard work of taking a result set, cleaning and passing
 	* over to the channel model, then cleaning and returning tag data
 	* to be output by the front-end tags
@@ -357,21 +358,21 @@ class Sift_core_model extends Sift_model {
 	// --------------------------------------------------------------------
 
 	private function _sift_matrix_tagdata()
-	{	
+	{
 		if( $this->force_single_matrix_rows === FALSE ) return;
 
 		// Do we actually _need_ to do anything?
-		/* 
+		/*
 			* this only needs to kick in when we have the condition
-			* that there is at least one entry with multiple 
-			* matrix rows in the result set 
+			* that there is at least one entry with multiple
+			* matrix rows in the result set
 		*/
 
 		$clean = FALSE;
 		$tmp = array();
 		foreach( $this->result_data as $row )
 		{
-			if( isset( $tmp[ $row['entry_id'] ] ) ) 
+			if( isset( $tmp[ $row['entry_id'] ] ) )
 			{
 				$clean = TRUE;
 				continue;
@@ -383,7 +384,7 @@ class Sift_core_model extends Sift_model {
 		if( $clean == FALSE ) return;
 
 		// This becomes expensive quick. so we'll only allow it when
-		// the local conditions allow. 
+		// the local conditions allow.
 		if( count( $this->result_data ) > $this->seperate_matrix_row_limit ) return;
 
 		// ok, we have something to actually do. This get's tricky fast
@@ -431,7 +432,7 @@ class Sift_core_model extends Sift_model {
 
 	// --------------------------------------------------------------------
 
-	private function _pass_to_channel( $entry_ids = array(), $items = array() ) 
+	private function _pass_to_channel( $entry_ids = array(), $items = array() )
 	{
 		if ( class_exists('Channel') === FALSE )
 		{
@@ -449,13 +450,13 @@ class Sift_core_model extends Sift_model {
 
 		// Cleanup
 		$base = str_replace( '+', '%2B', $base );
-		if( !empty( $base ) ) 
+		if( !empty( $base ) )
 		{
 			$base = $this->EE->uri->uri_string . '?' . implode( '&', $base );
 			$this->EE->TMPL->tagparams['paginate_base'] = $base;
 			$this->EE->uri->page_query_string = $base .'/P'.$this->offset;
 		}
- 
+
 
 		$channel = new Channel;
 
@@ -504,7 +505,7 @@ class Sift_core_model extends Sift_model {
 
 	// --------------------------------------------------------------------
 
-	private function prep_low_search_channel( $params ) 
+	private function prep_low_search_channel( $params )
 	{
 		if ( class_exists('Channel') === FALSE )
 		{
@@ -522,13 +523,13 @@ class Sift_core_model extends Sift_model {
 
 		// Cleanup
 		$base = str_replace( '+', '%2B', $base );
-		if( !empty( $base ) ) 
+		if( !empty( $base ) )
 		{
 			$base = $this->EE->uri->uri_string . '?' . implode( '&', $base );
 			$this->EE->TMPL->tagparams['paginate_base'] = $base;
 			$this->EE->uri->page_query_string = $base .'/P'.$this->offset;
 		}
- 
+
 
 		$channel = new Channel;
 
@@ -570,12 +571,12 @@ class Sift_core_model extends Sift_model {
 
 	// --------------------------------------------------------------------
 
-	/* 
+	/*
 	* Actually does ths work of sifting matrix rows
 	* Depending on the search settings it'll return
 	* different sets based on our inclusiveness options
-	* May also return FALSE to indicate it wasn't a 
-	* valid search set 
+	* May also return FALSE to indicate it wasn't a
+	* valid search set
 	*/
 	private function _perform_sift()
 	{
@@ -609,7 +610,7 @@ class Sift_core_model extends Sift_model {
 			}
 
 			// Step three - build up the query
-			if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;		
+			if( !isset( $this->ids['matrix_field_id'] ) ) return FALSE;
 			$sql = 'SELECT exp_matrix_data.* {%JOIN_A%} FROM exp_matrix_data {%JOIN_B%} WHERE field_id = '.$this->ids['matrix_field_id'] . ' {%JOIN_C%} ';
 
 			// Search all the searchable cells
@@ -622,7 +623,7 @@ class Sift_core_model extends Sift_model {
 				}
 
 				$sql .= '( '. implode( $keyword_grouper, $tmp ) .' ) ';
-				
+
 			}
 
 
@@ -634,8 +635,8 @@ class Sift_core_model extends Sift_model {
 					$tmp = array();
 					// Arrays get the sub-group treatment
 					foreach( $this->search_data['cells'][ $cell_id ] as $cell )
-					{	
-						if( trim( $cell ) != '' ) 
+					{
+						if( trim( $cell ) != '' )
 						{
 							// Per cell, loose on/off also
 							if( $loose == '' )
@@ -654,7 +655,7 @@ class Sift_core_model extends Sift_model {
 				}
 				else
 				{
-					if( trim( $this->search_data['cells'][ $cell_id ] ) != '' ) 
+					if( trim( $this->search_data['cells'][ $cell_id ] ) != '' )
 					{
 						// Per cell loose ends on/off
 						if( $loose == '' )
@@ -721,7 +722,7 @@ class Sift_core_model extends Sift_model {
 			}
 
 
-			$replacements = array('{%JOIN_A%}' => '', 
+			$replacements = array('{%JOIN_A%}' => '',
 									'{%JOIN_B%}' => '',
 									'{%JOIN_C%}' => ' AND ',
 									'{%JOIN_D%}' => '' );
@@ -772,25 +773,25 @@ class Sift_core_model extends Sift_model {
 
 	// --------------------------------------------------------------------
 
-	/* 
-	*  Runs away and try to get corresponding channel_ids, 
+	/*
+	*  Runs away and try to get corresponding channel_ids,
 	*  Field_ids, cell col_ids for all the passed params
 	*  Relies on a peristent cache to speed things up
 	*/
 	private function _collect_ids()
 	{
 		// At a minimum all we need is the matrix field id
-		// That can be supplied as either : 
-		//  matrix_field_name or matrix_field_id 
+		// That can be supplied as either :
+		//  matrix_field_name or matrix_field_id
 
-		// Any extra filters like channel(s) entry_id(s) status(es) will 
+		// Any extra filters like channel(s) entry_id(s) status(es) will
 		// be applied via the channel->entries class before we cleanup later
 		$matrix_field_id = FALSE;
 
 		if( $this->_isset_and_is_int( 'matrix_field_id', $this->sift_data ))
 		{
 			$matrix_field_id = $this->sift_data['matrix_field_id'];
-			$this->matrix_field_name = $this->EE->sift_data_model->get_matrix_field_name( $matrix_field_id );	
+			$this->matrix_field_name = $this->EE->sift_data_model->get_matrix_field_name( $matrix_field_id );
 		}
 		else
 		{
@@ -803,7 +804,7 @@ class Sift_core_model extends Sift_model {
 			$this->matrix_field_name = $matrix_field_name;
 
 			// Now get the id
-			$matrix_field_id = $this->EE->sift_data_model->get_matrix_id( $matrix_field_name );	
+			$matrix_field_id = $this->EE->sift_data_model->get_matrix_id( $matrix_field_name );
 		}
 		if( $matrix_field_id === FALSE ) return FALSE;
 
@@ -824,11 +825,11 @@ class Sift_core_model extends Sift_model {
 		$range_cells = array();
 		foreach( $possible_cells as $cell_name => $cell_id )
 		{
-			if( isset( $this->sift_data_ignored[ $cell_name ] ) ) 
+			if( isset( $this->sift_data_ignored[ $cell_name ] ) )
 			{
 				$cell_name = $this->adjust_modifier . $cell_name;
 			}
-			elseif( isset( $this->sift_data_ignored[ 'range:'.$cell_name ] ) ) 
+			elseif( isset( $this->sift_data_ignored[ 'range:'.$cell_name ] ) )
 			{
 				$cell_name = $this->adjust_modifier . $cell_name;
 			}
@@ -849,7 +850,7 @@ class Sift_core_model extends Sift_model {
 					$tmp = trim( $this->sift_data[ 'range:'.$cell_name ] );
 					if( strpos(  $tmp , $this->range_modifier ) == 0 )
 					{
-						// This is of the form ';val', ie. < val 
+						// This is of the form ';val', ie. < val
 						$tmp = str_replace( $this->range_modifier, ' <= ', $tmp );
 						$range_cells[ $cell_id ] = $tmp;
 					}
@@ -865,12 +866,12 @@ class Sift_core_model extends Sift_model {
 						$vals = explode( $this->range_modifier, $tmp );
 						$range_cells[ $cell_id ] = ' >= "'. $vals[0] . '" AND col_id_'.$cell_id . ' <= "'.$vals[1].'" ';
 					}
-					
+
 				}
 				else
 				{
 					// It looks like this range cell just has a plain value in
-					// We'll allow this to handle the case where a range input 
+					// We'll allow this to handle the case where a range input
 					// needs to return a single value
 					$range_cells[ $cell_id ] = ' = "'.$this->sift_data['range:'.$cell_name].'" ';
 				}
@@ -917,23 +918,23 @@ class Sift_core_model extends Sift_model {
 		return TRUE;
 	}
 
-	
+
 	// --------------------------------------------------------------------
 
-	/* 
-	* Validates the passed sift data for consistency and 
+	/*
+	* Validates the passed sift data for consistency and
 	* logical validity, ie. we're searching on a real
 	* channel and field, there's something to actually do
 	*/
-	private function _validate_sift_data() 
+	private function _validate_sift_data()
 	{
-		$status = FALSE;	
+		$status = FALSE;
 
-		/* 
+		/*
 		* In addition to a basic existense check, we need to be sure
-		* the channel and matrix field's are really real, but 
-		* we'll check that on the fly later while trying 
-		* to run the query 
+		* the channel and matrix field's are really real, but
+		* we'll check that on the fly later while trying
+		* to run the query
 		*/
 
 		// Overrides for the default settings
@@ -947,7 +948,7 @@ class Sift_core_model extends Sift_model {
 			{
 				$this->force_single_matrix_rows = FALSE;
 			}
-			
+
 		}
 
 		// Overrides the cookie param saving
@@ -968,7 +969,7 @@ class Sift_core_model extends Sift_model {
 		* We let users pass category groups in seperate fields
 		* by using the field name category_group_# , or category_group_#_#_#
 		*
-		* We need to split these out here, and drop them into the combined 
+		* We need to split these out here, and drop them into the combined
 		* category param for later passing over to the channel model
 		*/
 		if( !function_exists('category_group_split') ) {
@@ -978,12 +979,12 @@ class Sift_core_model extends Sift_model {
 			}
 		}
 
-		$cats = array_filter( array_keys( $this->sift_data ), 'category_group_split' ); 
+		$cats = array_filter( array_keys( $this->sift_data ), 'category_group_split' );
 		$cats = array_intersect_key( $this->sift_data, array_flip( $cats ) );
-		
-		if( !empty( $cats ) ) 
+
+		if( !empty( $cats ) )
 		{
-			// We have some cats, re-assign 
+			// We have some cats, re-assign
 			$current = array();
 
 			if( isset( $this->sift_data['category'] ) AND $this->sift_data['category'] != '') $current[] = $this->sift_data['category'];
@@ -997,9 +998,9 @@ class Sift_core_model extends Sift_model {
 		}
 
 		/*
-		* We let users specify an interior search value for searching 
-		* across multiple fields. 
-		* The field name follow is as follows : 
+		* We let users specify an interior search value for searching
+		* across multiple fields.
+		* The field name follow is as follows :
 		* 	{between:lower_field:upper_field}
 		* where lower_field and upper_field are two cells with numeric values
 		*/
@@ -1009,11 +1010,11 @@ class Sift_core_model extends Sift_model {
 		*   {range:cell_name}
 		* within the field name we use the range_modifier (by default ';')
 		* to denote the upper and lower bounds
-		* valid values : 
+		* valid values :
 		* 	;10  == < 10
 		*  	5;20 == 5 < x < 20
-		* 	25;  == > 25 
-		* 
+		* 	25;  == > 25
+		*
 		* 	this is the syntax we piggy back the between: searching on
 		*/
 
@@ -1026,9 +1027,9 @@ class Sift_core_model extends Sift_model {
 		$betweens = array_filter( array_keys( $this->sift_data), 'between_split' );
 		$betweens = array_intersect_key( $this->sift_data, array_flip( $betweens ) );
 
-		if( !empty( $betweens ) ) 
+		if( !empty( $betweens ) )
 		{
-			// We have some between searches. 
+			// We have some between searches.
 			// Validate the actual sub parts are valid cell names
 			// and then convert to masked range searches
 			foreach( $betweens as $key => $val )
@@ -1050,20 +1051,20 @@ class Sift_core_model extends Sift_model {
 		}
 
 
-		/* 
+		/*
 		* We also allow users to supply a bound value
 		* to adjust a numeric range search with +/- limits
-		* So : A search for width = 5, with bound:width = 2, 
-		* really search for 3 < width < 7 
+		* So : A search for width = 5, with bound:width = 2,
+		* really search for 3 < width < 7
 		*
-		* This works with any value, and will adjust the search value 
-		* silently. If it's a straight up search that'll kick it 
+		* This works with any value, and will adjust the search value
+		* silently. If it's a straight up search that'll kick it
 		* into a between search. If it's a range it'll simply
 		* adjust the searched value up or down as appropriate
 		*
-		* The cases are as follows : 
+		* The cases are as follows :
 		* 	width = 5, bound:width = 2
-		* 		==>   (5-2) < width < (5+2)	
+		* 		==>   (5-2) < width < (5+2)
 		*
 		*   range:width = :5, bound = 2
 		* 		==>   width <= 5, bound:width = 2,
@@ -1076,24 +1077,24 @@ class Sift_core_model extends Sift_model {
 		*   range:width = 5:10, bound = 2
 		* 		==>   5 <= width <= 10, bound:width = 2,
 		* 		==>	  (5-2) <= width <= (10+2)
-		* 
-		* 
+		*
+		*
 		*   between:width:height = 5, bound:width:height = 2
 		* 		==>   width >= 5 AND height <=5, bound 2
-		* 		==>	  width >= (5+2) AND height <= (5-2)	
-		* 
+		* 		==>	  width >= (5+2) AND height <= (5-2)
+		*
 		*  Make sense?
-		*  If any passed bound fields don't match with a 
+		*  If any passed bound fields don't match with a
 		*  value passed field or either values are non-numeric
 		*  they are simply ignored
-		*/ 
+		*/
 
-		if( !function_exists('bound_split')) {	
+		if( !function_exists('bound_split')) {
 			function bound_split( $var ) {
 				if( strpos( $var, 'bound:' ) > -1 ) return $var;
 			}
 		}
-	
+
 
 		$bounds = array_filter( array_keys( $this->sift_data), 'bound_split' );
 		$bounds = array_intersect_key( $this->sift_data, array_flip( $bounds ) );
@@ -1104,7 +1105,7 @@ class Sift_core_model extends Sift_model {
 
 			// We'll add these as new params to the sift_data search array,
 			// but also mark the parent items to be ignored later when
-			// we build the search strings. 
+			// we build the search strings.
 			// That way we can still retain repopulation data
 			// without needing to do backflips later on
 
@@ -1136,10 +1137,10 @@ class Sift_core_model extends Sift_model {
 
 						if( strpos( $value, $this->range_modifier ) > -1 )
 						{
-							
+
 							if( strpos(  $value , $this->range_modifier ) == 0 )
 							{
-								// This is of the form ';val', ie. < val 
+								// This is of the form ';val', ie. < val
 								$new_name = $this->adjust_modifier . $cell;
 								$tmp = str_replace( $this->range_modifier, '', $value );
 
@@ -1184,12 +1185,12 @@ class Sift_core_model extends Sift_model {
 								$this->sift_data_ignored[ 'range:'.$cell ] = $value;
 
 							}
-							
+
 						}
 						else
 						{
 							// It looks like this range cell just has a plain value in
-							// We'll allow this to handle the case where a range input 
+							// We'll allow this to handle the case where a range input
 							// and just treat it like a straight up input
 							//$range_cells[ $cell_id ] = ' = "'.$this->sift_data['range:'.$cell_name].'" ';
 
@@ -1216,8 +1217,8 @@ class Sift_core_model extends Sift_model {
 
 	// --------------------------------------------------------------------
 
-	/* 
-	* Gets any tmpl passed params and assigns them 
+	/*
+	* Gets any tmpl passed params and assigns them
 	* to our sift_data array
 	*/
 	private function _check_tmpl()
@@ -1225,7 +1226,7 @@ class Sift_core_model extends Sift_model {
 		$this->sift_data = $this->EE->TMPL->tagparams;
 	}
 
-	
+
 	private function _check_cookie()
 	{
 		$all = $this->EE->sift_cookie_model->all();
@@ -1237,8 +1238,8 @@ class Sift_core_model extends Sift_model {
 
 	// ----------------
 	// --------------------------------------------------------------------
-	
-	/* 
+
+	/*
 	* Gets any post passed params, cleans and checks them,
 	* and assigns to sift_data array
 	*/
@@ -1250,14 +1251,14 @@ class Sift_core_model extends Sift_model {
 		// We can't just use the native ->input->post as it's already been cleared
 		$raw = $this->EE->security->xss_clean( $_POST );
 
-		// Pass over to the general cleanup and assign routine	
+		// Pass over to the general cleanup and assign routine
 		$posts = $this->_clean_and_assign_params( $raw, TRUE );
 		$this->passed = array_merge( $posts, $this->passed );
 	}
 
 	// --------------------------------------------------------------------
-	
-	/* 
+
+	/*
 	* Gets any passed params via Low search, prefixed with out sift marker
 	*/
 	private function _check_low_search($params)
@@ -1282,8 +1283,8 @@ class Sift_core_model extends Sift_model {
 
 
 	// --------------------------------------------------------------------
-	
-	/* 
+
+	/*
 	* Gets any get passed params, cleans and checks them,
 	* and assigns to sift_data array
 	*/
@@ -1301,15 +1302,15 @@ class Sift_core_model extends Sift_model {
 	}
 
 	// --------------------------------------------------------------------
-	
-	/* 
+
+	/*
 	* Takes a raw array of keys and does basic cleanup,
 	* used by the post and get param passing
 	*/
 	private function _clean_and_assign_params( $raw, $return = FALSE )
-	{	
+	{
 		$ret = array();
- 
+
 		$i = 0;
 		// loop over them and do a quick cleanup
 		foreach( $raw as $key => $val )
@@ -1321,27 +1322,27 @@ class Sift_core_model extends Sift_model {
 			// The last passed variable gets special treatment
 			// This is to counter a pagination bug in the core EE pagination class
 			// rather than reworking it completely to use our own impliementation
-			// we'll just add a work around here, so all the native pagination 
-			// variables will still work. 
+			// we'll just add a work around here, so all the native pagination
+			// variables will still work.
 			if( $i == count( $raw ) )
 			{
 				// Does this value look like it has a '/P#' appended to the end?
 				if ( preg_match("#^P(\d+)|/P(\d+)#", $val, $match) )
 				{
 					// It looks like this is a paginated clause,
-					// wipe it, but keep a marker for later when we need to pass over to the 
+					// wipe it, but keep a marker for later when we need to pass over to the
 					// parent channel, when we'll reinstate it.
-					$val = str_replace( $match[0], '', $val );	
-					$this->offset = $match[2];		
-				} 
+					$val = str_replace( $match[0], '', $val );
+					$this->offset = $match[2];
+				}
 			}
- 
-			if( trim( $val ) != '' ) 
+
+			if( trim( $val ) != '' )
 			{
 				$this->sift_data[ $key ] = $val;
 				if( $return ) $ret[ $key ] = $val;
 			}
- 
+
 			$this->sift_data[ $key ] = $val;
 		}
 
@@ -1349,7 +1350,7 @@ class Sift_core_model extends Sift_model {
 		foreach( $this->specials as $key )
 		{
 			if( isset( $raw[ $key ] ) )
-			{					
+			{
 				// Don't allow overrides from post data (for now)
 				if( isset( $this->sift_data[ $key ] ) ) continue;
 
@@ -1360,8 +1361,8 @@ class Sift_core_model extends Sift_model {
 		if( $return ) return $ret;
 	}
 
-	/* 
-	* Checks if a key isset and the value is an integer 
+	/*
+	* Checks if a key isset and the value is an integer
 	*/
 	private function _isset_and_is_int( $needle, $haystack )
 	{

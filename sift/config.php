@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Sift Config File 
+ * Sift Config File
  *
  * @package         sift_ee_addon
- * @version         1.3.0
+ * @version         1.3.1
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
- * @link            http://squarebit.co.uk/sift
+ * @link            http://squarebit.co.uk/addons/sift
  * @copyright       Copyright (c) 2013, Joel Bradbury
  */
 
@@ -14,8 +14,8 @@ if ( ! defined('SIFT_NAME'))
 {
 	define('SIFT_NAME',         'Sift');
 	define('SIFT_CLASS_NAME',   'Sift');
-	define('SIFT_VERSION',      '1.3.0');
-	define('SIFT_DOCS',         'http://squarebit.co.uk/sift');
+	define('SIFT_VERSION',      '1.3.1');
+	define('SIFT_DOCS',         'http://squarebit.co.uk/addons/sift');
 	define('SIFT_DEBUG',        FALSE);
 }
 
