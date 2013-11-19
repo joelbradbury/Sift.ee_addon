@@ -94,7 +94,8 @@ class Sift_ext {
 		if( !isset( $this->EE->sift_model ) ) $this->EE->load->library('Sift_model');
 
 		// Load other models
-		Sift_model::load_models();
+		if( !isset( $this->EE->sift_core_model ) ) Sift_model::load_models();
+
 	}
 
 

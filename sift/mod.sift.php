@@ -32,13 +32,10 @@ class Sift {
 		$this->EE =& get_instance();
 
 		// Load base model
-		$this->EE->load->library('Sift_model');
-
-		// Load any additional libs
-		//$this->EE->load->library('example_lib');
+		if( !isset( $this->EE->sift_model ) ) $this->EE->load->library('Sift_model');
 
 		// Load other models
-		Sift_model::load_models();
+		if( !isset( $this->EE->sift_core_model ) ) Sift_model::load_models();
 
 		ini_set('memory_limit', '512M');
 		ini_set('memory_limit', '1024M');

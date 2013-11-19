@@ -47,11 +47,11 @@ class Sift_upd {
 		// Define the package path
 		$this->EE->load->add_package_path(PATH_THIRD.'Sift');
 
-		// Load libraries...
-		$this->EE->load->library('Sift_model');
+		// Load base model
+		if( !isset( $this->EE->sift_model ) ) $this->EE->load->library('Sift_model');
 
 		// Load other models
-		Sift_model::load_models();
+		if( !isset( $this->EE->sift_core_model ) ) Sift_model::load_models();
 	}
 
 	// --------------------------------------------------------------------
