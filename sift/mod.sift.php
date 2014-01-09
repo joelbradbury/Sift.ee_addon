@@ -4,10 +4,10 @@
  * Sift Module Class
  *
  * @package         sift_ee_addon
- * @version         1.3.1
+ * @version         1.3.2
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/addons/sift
- * @copyright       Copyright (c) 2013, Joel Bradbury
+ * @copyright       Copyright (c) 2014, Joel Bradbury
  */
 
 // include config file

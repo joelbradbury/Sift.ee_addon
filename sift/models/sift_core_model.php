@@ -4,14 +4,14 @@
  * Sift Core Model class
  *
  * @package         sift_ee_addon
- * @version         1.3.1
+ * @version         1.3.2
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/addons/sift
- * @copyright       Copyright (c) 2013, Joel Bradbury
+ * @copyright       Copyright (c) 2014, Joel Bradbury
  */
 class Sift_core_model extends Sift_model {
 
-	private $sift_data;
+	private $sift_data = array();
 	private $ids;
 	private $search_data;
 	public 	$result_data;
@@ -275,7 +275,8 @@ class Sift_core_model extends Sift_model {
 	{
 		$tmpl_params = $this->EE->TMPL->tagparams;
 
-		$passed = array_diff( $this->sift_data, $this->EE->TMPL->tagparams );
+		$passed = array();
+		if(is_array($this->EE->TMPL->tagparams)) $passed = array_diff( $this->sift_data, $this->EE->TMPL->tagparams );
 		if( empty( $passed ) ) return;
 
 		// Drop each of these into it's own cookie
@@ -929,6 +930,8 @@ class Sift_core_model extends Sift_model {
 	private function _validate_sift_data()
 	{
 		$status = FALSE;
+
+		if(!is_array($this->sift_data)) return $status;
 
 		/*
 		* In addition to a basic existense check, we need to be sure
