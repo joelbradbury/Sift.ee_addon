@@ -47,14 +47,19 @@ class Sift_mcp
 
 		$this->_prep_message();
 
-		// Load helper
+
+		// Define the package path
+//    	ee()->load->add_package_path(PATH_THIRD.'sift');
+
+		  // Load our helper
 		ee()->load->helper('Sift');
-
-		// Load Sift base model
 		ee()->load->library('Sift_model');
+		// Load base model
+        if(!class_exists('Sift_model')) ee()->load->library('Sift_model');
+        if(!isset(ee()->sift_data_model)) Sift_model::load_models();
 
-		// Load other models
-		Sift_model::load_models();
+
+    //	ee()->load->remove_package_path(PATH_THIRD.'sift');
 	}
 
 
