@@ -45,7 +45,7 @@ class Sift_upd {
 		$this->EE =& get_instance();
 
 		// Define the package path
-		$this->EE->load->add_package_path(PATH_THIRD.'Sift');
+		$this->EE->load->add_package_path(PATH_THIRD.'sift');
 
 		// Load base model
 		if( !isset( $this->EE->sift_model ) ) $this->EE->load->library('Sift_model');
