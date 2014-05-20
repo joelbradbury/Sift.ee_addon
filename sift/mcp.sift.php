@@ -19,8 +19,18 @@ class Sift_mcp
 
 	function __construct()
 	{
-		// Make a local reference to the ExpressionEngine super object
-		$this->EE =& get_instance();
+		//--------------------------------------------
+		//	Alias to get_instance()
+		//--------------------------------------------
+		if ( ! function_exists('ee') )
+		{
+			function ee()
+			{
+				return get_instance();
+			}
+		}
+
+
 		$this->module_name = strtolower(str_replace('_mcp', '', get_class($this)));
 		$this->base = str_replace( '&amp;D=', '&D=', BASE.'&C=addons_modules&M=show_module_cp&module=' . $this->module_name );
 
@@ -33,15 +43,15 @@ class Sift_mcp
 							lang('sets')		=> $this->base . '&method=sets',
 							lang('settings')	=> $this->base . '&method=settings');*/
 
-	//	$this->EE->cp->set_right_nav( $controls );
+	//	ee()->cp->set_right_nav( $controls );
 
 		$this->_prep_message();
 
 		// Load helper
-		$this->EE->load->helper('Sift');
+		ee()->load->helper('Sift');
 
 		// Load Sift base model
-		$this->EE->load->library('Sift_model');
+		ee()->load->library('Sift_model');
 
 		// Load other models
 		Sift_model::load_models();
@@ -58,23 +68,23 @@ class Sift_mcp
 	 */
 	function index()
 	{
-		$this->EE->cp->set_variable('cp_page_title', lang('sift_module_name'));
+		ee()->view->cp_page_title = lang('sift_module_name');
 
 		$this->cached_vars['clear_cache_form_uri'] = $this->base . '&method=clear_caches';
 
-		return $this->EE->load->view('mcp_sift', $this->cached_vars, TRUE);
+		return ee()->load->view('mcp_sift', $this->cached_vars, TRUE);
 
 	}
 
 	function clear_caches()
 	{
-		$this->EE->sift_data_model->clear_caches();
+		ee()->sift_data_model->clear_caches();
 
 		   // ----------------------------------
         //  Redirect to Settings page with Message
         // ----------------------------------
 
-        $this->EE->functions->redirect($this->base . '&method=index&msg=caches_cleared');
+        ee()->functions->redirect($this->base . '&method=index&msg=caches_cleared');
         exit;
 
 	}
@@ -90,7 +100,7 @@ class Sift_mcp
 	{
         if ( $message == '' AND isset( $_GET['msg'] ) )
         {
-        	$message = $this->EE->lang->line( $_GET['msg'] );
+        	$message = ee()->lang->line( $_GET['msg'] );
         }
 
 		$this->cached_vars['message']	= $message;
