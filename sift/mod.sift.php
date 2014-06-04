@@ -107,7 +107,7 @@ class Sift {
 
 		$form_class = $form_class != '' ? ' class="'.$form_class.'"' : '';
 		$form_id 	= $form_id != '' ? ' id="'.$form_id.'"' : '';
-		$form_method= $form_method != '' ? 'get' : $form_method;
+		$form_method= $form_method != '' ? $form_method : 'get';
 
 		// Get the action_id
 		$action_url = $this->EE->functions->fetch_site_index(). '/search';
