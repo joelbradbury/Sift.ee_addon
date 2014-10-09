@@ -4,7 +4,7 @@
  * Sift Extension Class
  *
  * @package         sift_ee_addon
- * @version         1.3.2
+ * @version         1.4.0
  * @author          Joel Bradbury ~ <joel@squarebit.co.uk>
  * @link            http://squarebit.co.uk/addons/sift
  * @copyright       Copyright (c) 2014, Joel Bradbury
