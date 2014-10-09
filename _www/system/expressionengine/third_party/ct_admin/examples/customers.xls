@@ -1,4 +1,0 @@
-cust_first_name	cust_last_name	cust_address	cust_address2	cust_city	cust_state	cust_zip	cust_country	cust_country_code	cust_company	cust_email_address	cust_shipping_first_name	cust_shipping_last_name	cust_shipping_address	cust_shipping_address2	cust_shipping_city	cust_shipping_state	cust_shipping_zip	cust_shipping_country	cust_shipping_country_code	cust_shipping_company	total_orders	total_sales
-First Name 1	Last Name 1									example@example.com											1	24
-First Name 2	Last Name 2									example@example.com											1	44
-First Name 3	Last Name 3									example@example.com											2	52
