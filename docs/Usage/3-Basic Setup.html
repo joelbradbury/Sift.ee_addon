@@ -1,0 +1,47 @@
+<h2>Basic Setup</h2>
+<p>Setting up <strong>Sift</strong> on your site is super simple. The basic usage consists of two simple parts: </p>
+<ol>
+	<li>Displaying a Search Form</li>
+	<li>Showing the Results View</li>
+</ol>
+
+
+<p class="note"><strong>Note:</strong> We'll use the field name of '<strong>product_options</strong>' throughout these examples. This is just a standard Matrix field, with a few columns</p>
+
+<p>Briefly : </p>
+
+<h3>1. Displaying a Search Form</h3>
+<p>The search form is a very simple setup. </p>
+
+<pre><code>&#123;<em>exp:sift:form</em>
+	matrix_field="product_options"&#125;
+	&lt;input type="text" name="cell_one"/&gt;
+	...
+	&lt;input type="submit" value="Sift"/&gt;
+&#123;/<em>exp:sift:form</em>&#125;</code></pre>
+
+<p>Within the <strong>exp:sift:form</strong> tag pair simply add form fields with the same name as the matrix columns. In the above example, we've got an input called '<em>cell_one</em>', which corresponds to a column in the '<em>product_options</em>' matrix field of the same name.</p> 
+
+<p>There are a few options available when using the <strong>&#123;exp:sift:form&#125;</strong> tag. <a href="/sift/docs/form">Checkout the full <strong>:form</strong> tag documentation</a>.</p>
+
+<p class="note"><strong>Note:</strong> You can setup your own form without using this tag. Simply make sure you have a hidden field called 'sift_search' with a value of 'yes'</p>
+
+
+<h3>2. Showing the Results View</h3>
+<p>The results view tag can be used in the same was as a normal <em>channel:entries</em> tag :</p>
+
+<pre><code>&#123;<em>exp:sift:view</em>&#125;
+	&#123;title&#125;
+	<em>&#123;product_options&#125;</em>
+		&#123;cell_one&#125;
+	<em>&#123;/product_options&#125;</em>
+&#123;/<em>exp:sift:view</em>&#125;</code></pre>
+
+<p>Here we're just simply looping over the resulting entries, and the matrix field exactly as you would in a normal channel:entries tag. Simple as pie! <strong>Sift</strong> will automatically limit both the entries returned, <strong>and</strong> the matrix rows returned, to just those that match your search.</p>
+
+<p>The <strong>sift:view</strong> tag can do some interesting things. It can even split up results in matrix rows, so that if multiple rows from the same entry match your search, it will loop over each as if they were from seperate entries, instead of only looping over the matrix field tag pair. For more info, <a href="/sift/docs/view">check out the full tag documentation</a>.</p>
+
+
+<h2>Going Further</h2>
+<p>Sift has lots more options to let you control the searching and output. <a href="/sift/docs/examples">Have a look through the examples to get an idea of what you can do with it</a>.</p>
+

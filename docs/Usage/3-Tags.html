@@ -1,0 +1,148 @@
+<h2>Tags</h2>
+
+<p>Sift has only two tags.</p>
+
+<dl class="tag-dfn-list">
+	<dt><a href="#tag-form"><code>&#123;exp:sift:form&#125;</a></code></dt>
+	<dd>Form wrapper tag. Used to create a search form, also has gives you helper tags to populate cell search options if needed, and control the search output style.</dd>
+
+	<dt><a href="#tag-view"><code>&#123;exp:sift:view&#125;</code></a></dt>
+	<dd>Main tag pair, used to view the sift search results.</dd>
+</dl>
+
+
+
+<p class="note"><strong>Note:</strong> In addition to the parameters listed below, check the <a href="/sift/docs/parameters#content">Full Parameters List</a> for all the parameters you can pass. These paramters can be passed as form inputs in the <strong>sift:form</strong> tag, and also as paramters on the <strong>sift:view</strong> tag.</p>
+
+
+<h3 id="tag-form">&#123;exp:sift:form&#125;</h3>
+<p>This is the form wrapper tag. Use it to easily create a search form for users to use. Also it will give you options for pre-population and valid input values if required.</p>
+
+<h4>Tag Parameters</h4>
+
+<dl class="tag-dfn-list">
+	<dt><code>matrix_field</code> *required</dt>
+	<dd>The name of the matrix field to be searched</dd>
+
+	<dt><code>return</code></dt>
+	<dd>The url to return to on submit, needs to have the :view tag in that template. Defaults to '/search'</dd>
+
+	<dt><code>form_class</code></dt>
+	<dd>Class to add to the form element.</dd>
+
+	<dt><code>form_id</code></dt>
+	<dd>Id to add to the form element</dd>
+
+	<dt><code>form_method</code></dt>
+	<dd>The method used to submit the form, defaults to <strong>GET</strong>, also takes a value of <strong>POST</strong></dd>
+</dl>
+
+
+
+<h4>Tag Variables</h4>
+<p>Within the <strong>:form</strong> tag to following variables are available :</p>
+
+<dl class="tag-dfn-list">
+	<dt><code>&#123;cell_name&#125;</code> (where '<em>cell_name</em>' is the name of the cell)</dt>
+	<dd>Returns the value of any previously passed value to allow for form repopulation after a search</dd>
+
+	<dt><code>&#123;seperate_rows&#125;</code></dt>
+	<dd>Passed setting whether to seperate or merge result rows per enty. Defaults to 'no'</dd>
+
+
+	<dt><code>&#123;range:cell_name&#125;</code> (where '<em>cell_name</em>' is the name of the cell)</dt>
+	<dd>Returns the value of any previouly passed range search value for form repopulation</dd>
+
+	<dt><code>&#123;between:cell_name:other_cell_name&#125;</code> (where '<em>cell_name</em>' and '<em>other_cell_name</em>' are cell names)</dt>
+	<dd>Returns the value of any previouly passed between search values for form repopulation</dd>
+
+
+	<dt><code>&#123;bound:cell_name&#125;</code> (where '<em>cell_name</em>' is the name of the cell)</dt>
+	<dd>Adjusts any passed numeric searches for the matching cell_name by the bound value. <a href="/sift/docs/range-searching#bounds">More about using bounds in your searches</a>.</dd>
+</dl>
+
+<p>In addition you can use the cell name in a tag pair. Usage like : </p>
+
+<pre><code>&#123;cell_name&#125;
+	&#123; <em>value</em>&#125;
+&#123;/cell_name&#125;</code></pre>
+
+<dl class="tag-dfn-list">
+	<dt><code>&#123;value&#125;</code></dt>
+	<dd>The possible value for this cell, looped over. Use to create a select style input with the possible cell values. <a href="/sift/docs/form-example">Example of usage</a></dd>
+</dl>
+
+<p>Get a full idea for how you can use these parameters and variables together <a href="/sift/docs/form-example">in the exmaples</a>.</p>
+
+<h3 id="tag-view">&#123;exp:sift:view&#125;</h3>
+<p>The <strong>:view</strong> tag does all the heavy lifting in <strong>Sift</strong>.</p>
+
+<h4>Tag Parameters</h4>
+<dl class="tag-dfn-list">
+	<dt><code>matrix_field</code> * Required</dt>
+	<dd>The name of the matrix field to search on</dd>
+
+	<dt><code>cell_name</code> (where '<em>cell_name</em>' is the name of a cell to search on)</dt>
+	<dd>Alternative way to specify search values. Effectively the same as passing a search form with the same value.
+		<p class="">eg. <code>cell_one="blue"</code> would search on the <code>cell_one</code> cell for a value of <code>blue</code>.</p>
+	</dd>
+	<dt><code>seperate_view</code></dt>
+	<dd>Defaults to 'no'. Pass a value of 'yes' to split out the matrix row results between entries. <a href="/sift/docs/display-options#content">More information about the seperated view</a></dd>
+
+
+	<dt><code>channel</code></dt>
+	<dd>Channel to limit searches to. This can be useful if you're sharing your field groups over multiple channels.</dd>
+
+	<dt><code>limit</code></dt>
+	<dd>The number of results to return for the search. Paginate your results as standard.</dd>
+
+	<dt><code>orderby</code></dt>
+	<dd>The custom <strong>matrix cell</strong> to order results by.</dd>
+
+	<dt><code>sort</code></dt>
+	<dd>The sort order used on the results. Defaults to 'asc'</dd>
+
+
+</dl>
+<p class="note"><strong>Note:</strong> The <strong>:view</strong> tag is really a channel:entries tag in disguise. Most of the same parameters and variables from the standard entries loop also work here</p>
+
+<h4>Tag Variables</h4>
+<p>The <strong>:view</strong> tag has all the standard entry, field and loop variables as the channel:entries tag. All your normal field variables will work here as normal. In addition to those the following extra variables are available:</p>
+
+<p class="note"><strong>Note:</strong> The tag variables listed below are also available outside the <strong>:view</strong> tag pair, and get added as global variables on sift pages. How handy!</p>
+
+<dl class="tag-dfn-list">
+	<dt><code>&#123;sifted:var_name&#125;</code> where '<em>var_name</em>' is the name off a passed variable</dt>
+	<dd>The value of any passed search inputs. So if you have a search form with an input called '<strong>cell_one</strong>' then <strong>&#123;sifted:cell_one&#125;</strong> would be the value the user just entered that sift is searching on.</dd>
+
+
+	<dt><code>&#123;total_rows&#125;</code></dt>
+	<dd>The total number of matrix rows returned. Similar to the standard &#123;total_results&#125; but counting rows instead of just entries. If the results are paginated, this is just the count of the rows on this page.</dd>
+
+	<dt><code>&#123;absolute_total_rows&#125;</code></dt>
+	<dd>The absolute number of matrix rows returned. Similar to the standard &#123;absolute_total_results&#125; but counting rows instead of just entries. Returns the absolute total across all paginated results.</dd>
+
+	<dt><code>&#123;total_unique_entries&#125;</code></dt>
+	<dd>The total number of unique entries returned. Useful when in <em>seperate_view</em> to get the count of different entries, not just the total row count. Returns count from just the current page if the result set has been paginated.</dd>
+
+	<dt><code>&#123;absolute_total_unique_entries&#125;</code></dt>
+	<dd>The absolute total number of unique entries returned. Useful when in <em>seperate_view</em> to get the count of different entries, not just the total row count. As before, returns count from all paginated results.</dd>
+</dl>
+
+<p>Use your normal markup to access your matrix field's rows. Sift will automatically rework the output to only output the matrix rows that match the searched terms. If the 'seperate_view="yes"' param was passed this tag pair will create a loop for each single row. </p>
+
+<p class="note"><strong>Note:</strong> Seperating the matrix rows into seperate entries is limited to when there are less than 25 results in from the search. This is done to keep the results tag snappy. More than that, and it can run into performance issues.</p>
+
+<p>To get a better idea of what this means in practise, <a href="/sift/docs/examples">have a look over the examples</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
